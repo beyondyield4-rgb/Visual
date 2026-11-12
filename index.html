@@ -25,8 +25,7 @@
 .study-actions button{font-size:14px}
 .study-badge{display:inline-block;background:#eaf0ff;color:#2453b8;border-radius:20px;padding:4px 9px;font-size:12px;font-weight:650}
 @media(max-width:770px){.study-grid{grid-template-columns:1fr}.study-input{font-size:18px}}
-  <!doctype html>
-<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Visualizer</title>
+
   
 /* VISUALIZER — INTERFACCIA MINIMAL */
 
@@ -218,32 +217,8 @@ input[type="range"] {
   }
 }
 
-<style>
-:root{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#19263b;background:#f3f6fc}*{box-sizing:border-box}body{margin:0}main{max-width:1160px;margin:auto;padding:24px 14px}h1{font-size:clamp(25px,3vw,34px);margin:3px 0 14px;letter-spacing:-.5px}p{color:#5e718f;margin:0 0 16px;font-size:17px}.tabs,.actions{display:flex;gap:8px;flex-wrap:wrap}button{font:inherit;cursor:pointer;background:white;border:1px solid #cbd8ee;color:#20395f;border-radius:10px;padding:10px 15px;min-height:42px}button.active,button.primary{background:#285bdb;border-color:#285bdb;color:#fff}button:focus-visible,input:focus-visible{outline:2px solid #285bdb;outline-offset:2px}.tabs{margin-bottom:12px}.layout{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(315px,1fr);gap:14px}.card{background:#fff;border:1px solid #d9e4f3;border-radius:16px;padding:15px;min-width:0}.plot-wrap{position:relative;width:100%;aspect-ratio:720/540}canvas{display:block;width:100%;height:100%;touch-action:none;border-radius:6px}.actions{margin:12px 0}.hint{font-size:14px;color:#5a7090;margin-top:10px}.equation{text-align:center;font-weight:750;font-size:24px;margin:8px 0 20px;min-height:30px}.control{margin:17px 0 23px}.control-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:650;font-size:14px}.control input[type=number]{width:90px;padding:7px;font:inherit;font-size:16px;border:1px solid #ccd8eb;border-radius:8px;background:#fff;color:#15243f}.control input[type=range]{display:block;margin-top:17px;width:100%;accent-color:#285bdb;touch-action:pan-y}.checks{margin:20px 0 12px;display:grid;gap:14px;font-size:14px}.checks input{accent-color:#285bdb}.facts{padding:13px;background:#f2f5fc;border-radius:13px;font-size:14px;line-height:2;margin-top:15px}.facts strong{font-weight:700}.action-panel{margin-top:12px}button:active{transform:translateY(1px)}@media(max-width:770px){main{padding:14px 10px}.layout{grid-template-columns:1fr}h1{margin-top:8px}.card{padding:10px}p{font-size:15px}}
-
-/* Nuova schermata: studio di funzione */
-#studyLayout[hidden],#classicLayout[hidden]{display:none!important}
-.study-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
-.study-top label{font-weight:700}.study-input{flex:1;min-width:220px;border:1px solid #cbd8ee;border-radius:10px;padding:12px 14px;font-size:20px;color:#17243c}
-.study-grid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(315px,1fr);gap:14px}
-.study-plot{position:relative;aspect-ratio:720/540;width:100%}
-.study-plot canvas{width:100%;height:100%;display:block;touch-action:none}
-.study-error{color:#b42318;font-size:14px;min-height:20px;margin:7px 0}
-.study-legend{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0 5px;font-size:14px}
-.study-legend label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
-.study-legend input{accent-color:#285bdb}
-.swatch{width:13px;height:13px;border-radius:50%;display:inline-block}
-.study-formula{font-size:15px;line-height:1.6;overflow-wrap:anywhere;padding:10px 0;border-bottom:1px solid #e4eafa}
-.study-formula strong{color:#1d2a43}
-.study-facts{background:#f2f5fc;border-radius:12px;padding:12px;font-size:14px;line-height:1.8;margin-top:12px}
-.study-facts h3{margin:0 0 5px;font-size:15px}
-.study-help{font-size:13px;color:#667996;line-height:1.6}
-.study-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.study-actions button{font-size:14px}
-.study-badge{display:inline-block;background:#eaf0ff;color:#2453b8;border-radius:20px;padding:4px 9px;font-size:12px;font-weight:650}
-@media(max-width:770px){.study-grid{grid-template-columns:1fr}.study-input{font-size:18px}}
 </style></head><body><main>
-<h1>Laboratorio di rette e parabole</h1><p>Muovi i coefficienti: il grafico cambia immediatamente.</p>
+<h1>Visualizer</h1><p>Muovi i coefficienti: il grafico cambia immediatamente.</p>
 <div class="tabs"><button id="lineTab" type="button">Retta</button><button id="quadTab" type="button" class="active">Parabola</button><button id="functionTab" type="button">Studio di funzione</button></div>
 <div class="layout" id="classicLayout"><section class="card"><div class="plot-wrap"><canvas id="plot" width="720" height="540" aria-label="Grafico interattivo"></canvas></div><div class="actions"><button id="zoomIn">+ Zoom</button><button id="zoomOut">− Zoom</button><button id="recenter">Centra</button></div><div class="hint">Trascina il grafico con il dito o la penna per spostare gli assi.</div></section>
 <section class="card"><div class="equation" id="equation"></div><div id="controls"></div><div class="checks"><label><input id="notable" type="checkbox" checked> Mostra punti notevoli</label><label><input id="showSaved" type="checkbox"> Mostra curva memorizzata</label></div><div class="actions action-panel"><button id="remember" class="primary">Memorizza per confronto</button><button id="restore">Ripristina</button></div><div class="facts" id="facts" aria-live="polite"></div></section></div>
@@ -463,7 +438,7 @@ update();
 </script></body></html>
 
 </style></head><body><main>
-<h1>Laboratorio di rette e parabole</h1><p>Muovi i coefficienti: il grafico cambia immediatamente.</p>
+<h1>Visualizer</h1><p>Muovi i coefficienti: il grafico cambia immediatamente.</p>
 <div class="tabs"><button id="lineTab" type="button">Retta</button><button id="quadTab" type="button" class="active">Parabola</button><button id="functionTab" type="button">Studio di funzione</button></div>
 <div class="layout" id="classicLayout"><section class="card"><div class="plot-wrap"><canvas id="plot" width="720" height="540" aria-label="Grafico interattivo"></canvas></div><div class="actions"><button id="zoomIn">+ Zoom</button><button id="zoomOut">− Zoom</button><button id="recenter">Centra</button></div><div class="hint">Trascina il grafico con il dito o la penna per spostare gli assi.</div></section>
 <section class="card"><div class="equation" id="equation"></div><div id="controls"></div><div class="checks"><label><input id="notable" type="checkbox" checked> Mostra punti notevoli</label><label><input id="showSaved" type="checkbox"> Mostra curva memorizzata</label></div><div class="actions action-panel"><button id="remember" class="primary">Memorizza per confronto</button><button id="restore">Ripristina</button></div><div class="facts" id="facts" aria-live="polite"></div></section></div>
