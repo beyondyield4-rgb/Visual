@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#151b29">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VideoNotes">
+<title>VideoNotes — Scrivi sui tuoi video</title>
+<style>
+:root{color-scheme:dark;--bg:#0e1420;--card:#1c2636;--line:#354255;--txt:#f1f5ff;--mute:#b6c3d7;--accent:#8bbaff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}button,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;background:#26344a;color:var(--txt);min-height:46px;padding:10px 14px}button:disabled{opacity:.38;cursor:default}button:focus-visible,.file:focus-within{outline:3px solid var(--accent)}.primary{background:#5b96f2;color:#09172a;font-weight:750;border-color:#78aaff}.active{outline:2px solid #90baff;background:#354b6d}.shell{max-width:1060px;margin:auto;padding:clamp(12px,2vw,22px) 14px 30px}.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.brand{font-weight:800;font-size:23px;letter-spacing:-.5px}.sub{color:var(--mute);font-size:13px}.file{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;min-height:46px;border-radius:12px;background:#5b96f2;color:#09172a;font-weight:700;cursor:pointer;white-space:nowrap}.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.stage{position:relative;overflow:hidden;border:1px solid #354255;border-radius:15px;background:#090d14;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;isolation:isolate}.stage video{height:100%;width:100%;display:block;object-fit:contain}.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2;pointer-events:none}.empty{position:absolute;z-index:3;pointer-events:none;color:#d0daec;text-align:center;padding:18px}.empty strong{display:block;font-size:20px;margin-bottom:8px}.empty small{color:#a8b7ce}.notice{font-size:14px;margin:10px 0;color:#bfcde2;min-height:20px}.panel{padding:14px;border-radius:15px;background:var(--card);margin-top:10px}.topline,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.topline{margin-bottom:12px}.spacer{flex:1}.time{font-size:13px;color:#ccdaf0;white-space:nowrap;font-variant-numeric:tabular-nums}.seek{width:100%;accent-color:#91bcff;height:25px;margin:0 0 3px}.tools{gap:8px}.tools .separator{width:1px;height:30px;background:var(--line);margin:0 2px}.swatches{display:flex;gap:7px}.swatch{width:38px;height:38px;min-height:38px;padding:0;border:3px solid #26344a;outline:1px solid #63748b;border-radius:50%;background:var(--swatch)}.swatch.selected{border-color:#e8f2ff;outline:2px solid #9bbfff}.widthpick{display:flex;gap:7px;align-items:center;color:var(--mute);font-size:13px}.widthpick input{width:92px;accent-color:#91bcff}.help{font-size:13px;line-height:1.5;color:#aabbd2;margin:12px 4px}.status{display:inline-block;min-width:90px;color:#c0d8ff;font-size:13px}.warn{color:#ffd4a5}@media(max-width:680px){.brand{font-size:20px}.file{font-size:13px}.panel{padding:10px}.topline button{padding:8px 10px}.tools{gap:6px}.swatch{width:35px;height:35px;min-height:35px}.widthpick input{width:70px}}@media(orientation:landscape) and (max-height:700px){.shell{padding-top:8px}.heading{margin-bottom:7px}.panel{padding:9px;margin-top:8px}.help{margin-top:6px}}
+</style>
+</head>
+<body>
+<main class="shell">
+ <div class="heading"><div><div class="brand">✏️ VideoNotes</div><div class="sub">Metti in pausa, scrivi, riprendi</div></div><label class="file">＋ Scegli video<input id="file" type="file" accept="video/*" aria-label="Seleziona un video dal tuo iPad"></label></div>
+ <div class="stage" id="stage"><video id="video" playsinline webkit-playsinline preload="metadata"></video><canvas id="ink" aria-label="Area di disegno sul video"></canvas><div class="empty" id="empty"><strong>Il tuo video diventa una lavagna</strong><small>Tocca “Scegli video” per cominciare</small></div></div>
+ <div class="notice" role="status" id="notice">Scegli un video. Quando metti in pausa puoi scrivere con Apple Pencil.</div>
+ <div class="panel">
+  <div class="topline"><button id="play" class="primary" disabled>▶ Riproduci</button><button id="back" disabled>↶ 5 s</button><button id="forward" disabled>5 s ↷</button><div class="spacer"></div><span class="time" id="clock">00:00 / 00:00</span></div>
+  <input class="seek" id="seek" type="range" min="0" max="1000" step="1" value="0" disabled aria-label="Posizione del video">
+  <div class="tools"><button id="pen" class="active" disabled>✏️ Penna</button><button id="eraser" disabled>◻ Gomma</button><button id="undo" disabled>↶ Annulla</button><button id="clear" disabled>🗑 Cancella</button><span class="separator"></span><div class="swatches" aria-label="Colori della penna"><button class="swatch selected" style="--swatch:#ffe86c" data-color="#ffe86c" aria-label="Giallo" disabled></button><button class="swatch" style="--swatch:#f8faff" data-color="#f8faff" aria-label="Bianco" disabled></button><button class="swatch" style="--swatch:#ff799c" data-color="#ff799c" aria-label="Rosa" disabled></button><button class="swatch" style="--swatch:#78d9ff" data-color="#78d9ff" aria-label="Azzurro" disabled></button><button class="swatch" style="--swatch:#91eeaa" data-color="#91eeaa" aria-label="Verde" disabled></button></div><div class="widthpick"><label for="size">Tratto</label><input id="size" type="range" min="2" max="17" value="5" disabled></div></div>
+ </div>
+ <p class="help">Funziona anche con il dito. Per evitare segni involontari, puoi scrivere solo quando il video è in pausa. Le annotazioni vengono cancellate quando premi Riproduci o cambi il punto del video. Il video originale non viene modificato né caricato online.</p>
+</main>
+<script>
+(function(){'use strict';
+ var $=function(id){return document.getElementById(id)};
+ var v=$('video'),canvas=$('ink'),ctx=canvas.getContext('2d'),stage=$('stage'),empty=$('empty'),notice=$('notice'),file=$('file'),seek=$('seek'),play=$('play');
+ var controls=['play','back','forward','pen','eraser','undo','clear','size'];
+ var strokes=[],current=null,tool='pen',color='#ffe86c',size=5,objectURL=null,loaded=false,drawing=false,wasSeeking=false;
+ var modelSize={w:1000,h:562.5};
+ function feedback(msg){notice.textContent=msg}
+ function available(){return loaded && v.paused}
+ function enable(){controls.forEach(function(id){$(id).disabled=!loaded});seek.disabled=!loaded;document.querySelectorAll('.swatch').forEach(function(el){el.disabled=!loaded})}
+ function clock(s){if(!isFinite(s))s=0;var h=Math.floor(s/3600),m=Math.floor(s/60)%60,x=Math.floor(s%60);return (h?h+':':'')+(h?('0'+m).slice(-2):m<10?'0'+m:m)+':'+('0'+x).slice(-2)}
+ function update(){play.textContent=v.paused?'▶ Riproduci':'❚❚ Pausa';$('clock').textContent=clock(v.currentTime)+' / '+clock(v.duration);if(isFinite(v.duration)&&v.duration>0)seek.value=Math.round(v.currentTime/v.duration*1000);if(loaded)canvas.style.pointerEvents=v.paused?'auto':'none';}
+ function resize(){var box=stage.getBoundingClientRect(),ratio=Math.min(window.devicePixelRatio||1,2);modelSize={w:box.width,h:box.height};canvas.width=Math.round(box.width*ratio);canvas.height=Math.round(box.height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);redraw()}
+ function point(ev){var r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)/r.width,y:(ev.clientY-r.top)/r.height}}
+ function renderStroke(s){if(!s.points.length)return;ctx.save();ctx.globalCompositeOperation=s.tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=s.tool==='eraser'?'rgba(0,0,0,1)':s.color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=s.size*Math.max(.5,modelSize.w/850);ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();s.points.forEach(function(p,i){var x=p.x*modelSize.w,y=p.y*modelSize.h;if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y)});if(s.points.length===1){var p=s.points[0];ctx.arc(p.x*modelSize.w,p.y*modelSize.h,Math.max(1,ctx.lineWidth/2),0,Math.PI*2);ctx.fill()}else ctx.stroke();ctx.restore()}
+ function redraw(){ctx.clearRect(0,0,modelSize.w,modelSize.h);strokes.forEach(renderStroke);if(current)renderStroke(current);$('undo').disabled=!loaded||!strokes.length;$('clear').disabled=!loaded||!strokes.length}
+ function wipe(){strokes=[];current=null;drawing=false;redraw()}
+ function setTool(t){tool=t;$('pen').classList.toggle('active',t==='pen');$('eraser').classList.toggle('active',t==='eraser')}
+ function pause(){if(!loaded)return;if(v.paused){wipe();var p=v.play();if(p&&p.catch)p.catch(function(){feedback('Safari non è riuscito a riprodurre questo video. Prova a toccare ancora Riproduci.')})}else v.pause();update()}
+ file.addEventListener('change',function(){var f=file.files&&file.files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);v.pause();v.removeAttribute('src');v.load();loaded=true;v.src=objectURL;v.load();empty.style.display='none';wipe();enable();update();feedback('Video selezionato: '+f.name+'. Premi Riproduci, poi Pausa per annotare.')});
+ v.addEventListener('loadedmetadata',function(){update();resize()});v.addEventListener('timeupdate',update);v.addEventListener('play',function(){wipe();update();feedback('Video in riproduzione. Mettilo in pausa per scrivere.')});v.addEventListener('pause',function(){update();if(loaded)feedback('Video in pausa: puoi scrivere sopra il fotogramma.')});v.addEventListener('ended',function(){update();feedback('Video terminato. Puoi tornare indietro e riprodurlo.')});v.addEventListener('error',function(){feedback('Questo video non si apre. Prova un file MP4 o MOV compatibile con Safari.')});
+ play.addEventListener('click',pause);$('back').addEventListener('click',function(){if(!loaded)return;v.currentTime=Math.max(0,v.currentTime-5);wipe()});$('forward').addEventListener('click',function(){if(!loaded)return;v.currentTime=Math.min(v.duration||0,v.currentTime+5);wipe()});
+ seek.addEventListener('input',function(){if(!loaded||!isFinite(v.duration))return;if(!v.paused){v.pause();wasSeeking=true}v.currentTime=Number(seek.value)/1000*v.duration;wipe();update()});seek.addEventListener('change',function(){wasSeeking=false});
+ $('pen').addEventListener('click',function(){setTool('pen')});$('eraser').addEventListener('click',function(){setTool('eraser')});$('undo').addEventListener('click',function(){if(strokes.length){strokes.pop();redraw()}});$('clear').addEventListener('click',wipe);
+ $('size').addEventListener('input',function(){size=Number(this.value)});document.querySelectorAll('.swatch').forEach(function(el){el.addEventListener('click',function(){color=el.dataset.color;setTool('pen');document.querySelectorAll('.swatch').forEach(function(b){b.classList.toggle('selected',b===el)})})});
+ canvas.addEventListener('pointerdown',function(e){if(!available())return;if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();drawing=true;current={tool:tool,color:color,size:tool==='eraser'?size*3:size,points:[point(e)]};if(canvas.setPointerCapture)try{canvas.setPointerCapture(e.pointerId)}catch(_){}redraw()});
+ canvas.addEventListener('pointermove',function(e){if(!drawing||!current)return;e.preventDefault();current.points.push(point(e));redraw()});
+ function finish(e){if(!drawing||!current)return;drawing=false;current.points.push(point(e));strokes.push(current);current=null;redraw()}
+ canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',function(){if(current){strokes.push(current);current=null;drawing=false;redraw()}});
+ canvas.addEventListener('contextmenu',function(e){e.preventDefault()});
+ window.addEventListener('resize',resize);if(window.ResizeObserver){new ResizeObserver(resize).observe(stage)}
+ document.addEventListener('visibilitychange',function(){if(document.hidden&&!v.paused)v.pause()});
+ enable();resize();update();
+})();
+</script>
+</body>
+</html>
