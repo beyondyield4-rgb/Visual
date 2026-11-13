@@ -7,911 +7,626 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="VideoNotes">
-<title>VideoNotes — Scrivi sui tuoi video</title>
+<title>VideoNotes 1.3 — Modalità LIM</title>
 <style>
 :root{color-scheme:dark;--bg:#0e1420;--card:#1c2636;--line:#354255;--txt:#f1f5ff;--mute:#b6c3d7;--accent:#8bbaff}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}button,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;background:#26344a;color:var(--txt);min-height:46px;padding:10px 14px}button:disabled{opacity:.38;cursor:default}button:focus-visible,.file:focus-within{outline:3px solid var(--accent)}.primary{background:#5b96f2;color:#09172a;font-weight:750;border-color:#78aaff}.active{outline:2px solid #90baff;background:#354b6d}.shell{width:100%;max-width:none;margin:0;padding:8px 10px 20px}.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.brand{font-weight:800;font-size:23px;letter-spacing:-.5px}.sub{color:var(--mute);font-size:13px}.file{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;min-height:46px;border-radius:12px;background:#5b96f2;color:#09172a;font-weight:700;cursor:pointer;white-space:nowrap}.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.stage{position:relative;overflow:hidden;border:1px solid #354255;border-radius:15px;background:#090d14;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;isolation:isolate}.stage video{height:100%;width:100%;display:block;object-fit:contain}.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2;pointer-events:none}.empty{position:absolute;z-index:3;pointer-events:none;color:#d0daec;text-align:center;padding:18px}.empty strong{display:block;font-size:20px;margin-bottom:8px}.empty small{color:#a8b7ce}.notice{font-size:14px;margin:10px 0;color:#bfcde2;min-height:20px}.panel{padding:14px;border-radius:15px;background:var(--card);margin-top:10px}.topline,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.topline{margin-bottom:12px}.spacer{flex:1}.time{font-size:13px;color:#ccdaf0;white-space:nowrap;font-variant-numeric:tabular-nums}.seek{width:100%;accent-color:#91bcff;height:25px;margin:0 0 3px}.tools{gap:8px}.tools .separator{width:1px;height:30px;background:var(--line);margin:0 2px}.swatches{display:flex;gap:7px}.swatch{width:38px;height:38px;min-height:38px;padding:0;border:3px solid #26344a;outline:1px solid #63748b;border-radius:50%;background:var(--swatch)}.swatch.selected{border-color:#e8f2ff;outline:2px solid #9bbfff}.widthpick{display:flex;gap:7px;align-items:center;color:var(--mute);font-size:13px}.widthpick input{width:92px;accent-color:#91bcff}.help{font-size:13px;line-height:1.5;color:#aabbd2;margin:12px 4px}.status{display:inline-block;min-width:90px;color:#c0d8ff;font-size:13px}.warn{color:#ffd4a5}@media(max-width:680px){.brand{font-size:20px}.file{font-size:13px}.panel{padding:10px}.topline button{padding:8px 10px}.tools{gap:6px}.swatch{width:35px;height:35px;min-height:35px}.widthpick input{width:70px}}@media(orientation:landscape) and (max-height:700px){.shell{padding-top:8px}.heading{margin-bottom:7px}.panel{padding:9px;margin-top:8px}.help{margin-top:6px}}
-
-/* Impedisce la selezione accidentale del video */
-.stage,
-.stage * {
-  -webkit-user-select: none !important;
-  user-select: none !important;
-  -webkit-touch-callout: none !important;
-  -webkit-user-drag: none !important;
-  -webkit-tap-highlight-color: transparent;
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);border-radius:12px;background:#26344a;color:var(--txt);min-height:46px;padding:10px 14px}
+button:disabled{opacity:.38;cursor:default}
+button:focus-visible,.file:focus-within{outline:3px solid var(--accent)}
+.primary{background:#5b96f2;color:#09172a;font-weight:750;border-color:#78aaff}
+.active{outline:2px solid #90baff;background:#354b6d}
+.shell{width:100%;max-width:none;margin:0;padding:clamp(8px,1.4vw,16px) 12px 22px}
+.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.brand{font-weight:800;font-size:23px;letter-spacing:-.5px}
+.sub{color:var(--mute);font-size:13px}
+.file{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;min-height:46px;border-radius:12px;background:#5b96f2;color:#09172a;font-weight:700;cursor:pointer;white-space:nowrap}
+.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.stage{position:relative;overflow:hidden;border:1px solid #354255;border-radius:15px;background:#090d14;aspect-ratio:16/9;max-height:68vh;display:flex;align-items:center;justify-content:center;isolation:isolate}
+.stage video{height:100%;width:100%;display:block;object-fit:contain;pointer-events:none}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2;pointer-events:none;display:block}
+.empty{position:absolute;z-index:3;pointer-events:none;color:#d0daec;text-align:center;padding:18px}
+.empty strong{display:block;font-size:20px;margin-bottom:8px}
+.empty small{color:#a8b7ce}
+/* Evita selezione, menu contestuale e trascinamento del video su Safari iPad. */
+.stage,.stage *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-user-drag:none;-webkit-tap-highlight-color:transparent}
+.stage{touch-action:none}
+.notice{font-size:14px;margin:10px 0;color:#bfcde2;min-height:20px}
+.panel{padding:14px;border-radius:15px;background:var(--card);margin-top:10px}
+.topline,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.topline{margin-bottom:12px}
+.spacer{flex:1}
+.time{font-size:13px;color:#ccdaf0;white-space:nowrap;font-variant-numeric:tabular-nums}
+.seek{width:100%;accent-color:#91bcff;height:25px;margin:0 0 3px}
+.tools{gap:8px}
+.tools .separator{width:1px;height:30px;background:var(--line);margin:0 2px}
+.swatches{display:flex;gap:7px}
+.swatch{width:38px;height:38px;min-height:38px;padding:0;border:3px solid #26344a;outline:1px solid #63748b;border-radius:50%;background:var(--swatch)}
+.swatch.selected{border-color:#e8f2ff;outline:2px solid #9bbfff}
+.widthpick{display:flex;gap:7px;align-items:center;color:var(--mute);font-size:13px}
+.widthpick input{width:105px;accent-color:#91bcff}
+.sizevalue{display:inline-block;min-width:29px;text-align:right;color:#eaf3ff;font-variant-numeric:tabular-nums}
+.speedpick{display:flex;align-items:center;gap:7px;color:var(--mute);font-size:13px}
+.speedpick select{font:inherit;font-size:15px;min-height:44px;border-radius:10px;padding:8px 12px;color:var(--txt);background:#26344a;border:1px solid var(--line)}
+.speedpick select:disabled{opacity:.38}
+.colorpick{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:38px;padding:5px 8px;border-radius:10px;border:1px solid #63748b;background:#26344a;color:var(--txt);cursor:pointer;font-size:13px;white-space:nowrap}
+.colorpick.selected{outline:2px solid #9bbfff}
+.colorpick input{width:28px;height:28px;min-height:28px;border:0;padding:0;background:none;cursor:pointer}
+.colorpick input:disabled{opacity:.38}
+.swatches{flex-wrap:wrap}
+.help{font-size:13px;line-height:1.5;color:#aabbd2;margin:12px 4px}
+.status{display:inline-block;min-width:90px;color:#c0d8ff;font-size:13px}
+.warn{color:#ffd4a5}
+/* Modalità LIM e piena larghezza, senza tagliare il video. */
+.workspace{width:100%;}
+body.lim-active{overflow:hidden;overscroll-behavior:none;}
+body.lim-active .heading,body.lim-active .notice,body.lim-active .help{display:none;}
+.workspace.lim-active{
+  position:fixed;top:0;right:0;bottom:0;left:0;
+  inset:0;z-index:99999;
+  width:100%;height:100vh;height:100dvh;
+  padding:8px 8px max(8px,env(safe-area-inset-bottom));
+  margin:0;background:#0e1420;
+  display:flex;flex-direction:column;
+  overflow:hidden;
 }
-
-.stage,
-.stage canvas {
-  touch-action: none;
+.workspace:fullscreen,.workspace:-webkit-full-screen{
+  width:100%;height:100%;margin:0;background:#0e1420;
 }
-
-.stage video {
-  pointer-events: none;
+.workspace.lim-active .stage{
+  flex:1 1 auto;min-height:0;width:100%;height:auto;
+  max-height:none;aspect-ratio:auto;border-radius:7px;
 }
-
+.workspace.lim-active .panel{
+  flex:0 0 auto;margin-top:6px;padding:7px 10px;
+  border-radius:8px;background:#1b2637;
+}
+.workspace.lim-active .topline{gap:7px;margin-bottom:3px;}
+.workspace.lim-active .tools{gap:6px;}
+.workspace.lim-active .panel button{min-height:38px;padding:6px 10px;border-radius:8px;}
+.workspace.lim-active .panel .swatch{width:30px;height:30px;min-height:30px;border-radius:50%;padding:0;}
+.workspace.lim-active .panel .speedpick select{min-height:36px;padding:5px 7px;}
+.workspace.lim-active .panel .colorpick{min-height:32px;padding:3px 6px;}
+.workspace.lim-active .panel .seek{height:17px;margin:0;}
+.workspace.lim-active .time{font-size:12px;}
+#lim{white-space:nowrap;}
+@media(max-height:600px){
+ .workspace.lim-active .panel{padding:4px 8px;}
+ .workspace.lim-active .topline{margin-bottom:2px;}
+ .workspace.lim-active .panel button{min-height:32px;padding:4px 8px;}
+ .workspace.lim-active .panel .swatch{width:28px;height:28px;min-height:28px;}
+}
+@media(max-width:680px){.brand{font-size:20px}.file{font-size:13px}.panel{padding:10px}.topline button{padding:8px 10px}.tools{gap:6px}.swatch{width:35px;height:35px;min-height:35px}.widthpick input{width:70px}}
+@media(orientation:landscape) and (max-height:700px){.shell{padding-top:8px}.heading{margin-bottom:7px}.panel{padding:9px;margin-top:8px}.help{margin-top:6px}}
 </style>
 </head>
 <body>
 <main class="shell">
- <div class="heading"><div><div class="brand">✏️ VideoNotes</div><div class="sub">Metti in pausa, scrivi, riprendi</div></div><label class="file">＋ Scegli video<input id="file" type="file" accept="video/*" aria-label="Seleziona un video dal tuo iPad"></label></div>
- <div class="stage" id="stage"><video id="video" playsinline webkit-playsinline preload="metadata"></video><canvas id="ink" aria-label="Area di disegno sul video"></canvas><div class="empty" id="empty"><strong>Il tuo video diventa una lavagna</strong><small>Tocca “Scegli video” per cominciare</small></div></div>
- <div class="notice" role="status" id="notice">Scegli un video. Quando metti in pausa puoi scrivere con Apple Pencil.</div>
- <div class="panel">
-  <div class="topline"><button id="play" class="primary" disabled>▶ Riproduci</button><button id="back" disabled>↶ 5 s</button><button id="forward" disabled>5 s ↷</button><div class="spacer"></div><span class="time" id="clock">00:00 / 00:00</span></div>
-  <input class="seek" id="seek" type="range" min="0" max="1000" step="1" value="0" disabled aria-label="Posizione del video">
-  <div class="tools"><button id="pen" class="active" disabled>✏️ Penna</button><button id="eraser" disabled>◻ Gomma</button><button id="undo" disabled>↶ Annulla</button><button id="clear" disabled>🗑 Cancella</button><span class="separator"></span><div class="swatches" aria-label="Colori della penna"><button class="swatch selected" style="--swatch:#ffe86c" data-color="#ffe86c" aria-label="Giallo" disabled></button><button class="swatch" style="--swatch:#f8faff" data-color="#f8faff" aria-label="Bianco" disabled></button><button class="swatch" style="--swatch:#ff799c" data-color="#ff799c" aria-label="Rosa" disabled></button><button class="swatch" style="--swatch:#78d9ff" data-color="#78d9ff" aria-label="Azzurro" disabled></button><button class="swatch" style="--swatch:#91eeaa" data-color="#91eeaa" aria-label="Verde" disabled></button></div><div class="widthpick"><label for="size">Tratto</label><input id="size" type="range" min="2" max="17" value="5" disabled></div></div>
- </div>
- <p class="help">Funziona anche con il dito. Per evitare segni involontari, puoi scrivere solo quando il video è in pausa. Le annotazioni vengono cancellate quando premi Riproduci o cambi il punto del video. Il video originale non viene modificato né caricato online.</p>
+  <div class="heading">
+    <div><div class="brand">✏️ VideoNotes</div><div class="sub">Metti in pausa, scrivi, riprendi</div></div>
+    <label class="file">＋ Scegli video<input id="file" type="file" accept="video/*" aria-label="Seleziona un video dal tuo iPad"></label>
+  </div>
+  <div class="workspace" id="workspace">
+  <div class="stage" id="stage">
+    <video id="video" playsinline webkit-playsinline preload="metadata" draggable="false"></video>
+    <canvas id="ink" aria-label="Area di disegno sul video"></canvas>
+    <div class="empty" id="empty"><strong>Il tuo video diventa una lavagna</strong><small>Tocca “Scegli video” per cominciare</small></div>
+  </div>
+  <div class="notice" role="status" id="notice">Scegli un video. Quando metti in pausa puoi scrivere con Apple Pencil.</div>
+  <div class="panel">
+    <div class="topline">
+      <button id="play" class="primary" disabled>▶ Riproduci</button>
+      <button id="back" disabled>↶ 5 s</button>
+      <button id="forward" disabled>5 s ↷</button>
+      <div class="speedpick"><label for="speed">Velocità</label>
+        <select id="speed" aria-label="Velocità di riproduzione" disabled>
+          <option value="0.25">0,25×</option>
+          <option value="0.5">0,5×</option>
+          <option value="0.75">0,75×</option>
+          <option value="1" selected>1×</option>
+          <option value="1.25">1,25×</option>
+          <option value="1.5">1,5×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <button id="lim" type="button" disabled aria-label="Attiva modalità LIM a schermo intero">⛶ Schermo intero</button>
+      <div class="spacer"></div><span class="time" id="clock">00:00 / 00:00</span>
+    </div>
+    <input class="seek" id="seek" type="range" min="0" max="1000" step="1" value="0" disabled aria-label="Posizione del video">
+    <div class="tools">
+      <button id="pen" class="active" disabled>✏️ Penna</button>
+      <button id="eraser" disabled>◻ Gomma</button>
+      <button id="undo" disabled>↶ Annulla</button>
+      <button id="clear" disabled>🗑 Cancella</button>
+      <span class="separator"></span>
+      <div class="swatches" aria-label="Colori della penna">
+        <button class="swatch selected" style="--swatch:#ffe86c" data-color="#ffe86c" aria-label="Giallo" disabled></button>
+        <button class="swatch" style="--swatch:#f8faff" data-color="#f8faff" aria-label="Bianco" disabled></button>
+        <button class="swatch" style="--swatch:#ff799c" data-color="#ff799c" aria-label="Rosa" disabled></button>
+        <button class="swatch" style="--swatch:#78d9ff" data-color="#78d9ff" aria-label="Azzurro" disabled></button>
+        <button class="swatch" style="--swatch:#91eeaa" data-color="#91eeaa" aria-label="Verde" disabled></button>
+        <button class="swatch" style="--swatch:#ff9d45" data-color="#ff9d45" aria-label="Arancione" disabled></button>
+        <button class="swatch" style="--swatch:#c79aff" data-color="#c79aff" aria-label="Viola" disabled></button>
+        <button class="swatch" style="--swatch:#ff4e4e" data-color="#ff4e4e" aria-label="Rosso" disabled></button>
+        <button class="swatch" style="--swatch:#4777ff" data-color="#4777ff" aria-label="Blu" disabled></button>
+        <button class="swatch" style="--swatch:#29d6bf" data-color="#29d6bf" aria-label="Turchese" disabled></button>
+        <button class="swatch" style="--swatch:#9da8b7" data-color="#9da8b7" aria-label="Grigio" disabled></button>
+        <button class="swatch" style="--swatch:#111827" data-color="#111827" aria-label="Nero" disabled></button>
+      </div>
+      <label class="colorpick" id="customWrap" for="customColor">🎨 Altri colori <input id="customColor" type="color" value="#ffe86c" aria-label="Scegli un colore personalizzato" disabled></label>
+      <div class="widthpick"><label for="size">Tratto</label><input id="size" type="range" min="0.5" max="17" step="0.1" value="2.5" disabled><output id="sizeValue" class="sizevalue" for="size">2,5</output></div>
+    </div>
+  </div>
+  </div><!-- /workspace: video + comandi nello schermo intero -->
+  <p class="help">VideoNotes 1.3 — Rallenta il video con “Velocità”, scegli un tratto fino a 0,5 e usa 12 colori o “Altri colori”. Scrivi con Apple Pencil o con il dito quando il video è in pausa. Le annotazioni scompaiono quando premi Riproduci o cambi il punto del video. Il video originale non viene modificato né caricato online.</p>
 </main>
-
 <script>
 (function () {
   'use strict';
 
-  var $ = function (id) {
-    return document.getElementById(id);
-  };
+  var $ = function (id) { return document.getElementById(id); };
+  var v = $('video'), canvas = $('ink'), ctx = canvas.getContext('2d');
+  var stage = $('stage'), empty = $('empty'), notice = $('notice');
+  var workspace = $('workspace'), limButton = $('lim');
+  var file = $('file'), seek = $('seek'), play = $('play');
+  var controls = ['play', 'back', 'forward', 'pen', 'eraser', 'size', 'lim', 'speed', 'customColor'];
+  var strokes = [], current = null, pending = [], activePointer = null;
+  var frame = 0, tool = 'pen', color = '#ffe86c', size = 2.5;
+  var objectURL = null, loaded = false;
+  var view = { w: 1000, h: 562.5, dpr: 1 };
 
-  var v = $('video');
-  var canvas = $('ink');
-  var ctx = canvas.getContext('2d');
-  var stage = $('stage');
-  var empty = $('empty');
-  var notice = $('notice');
-  var file = $('file');
-  var seek = $('seek');
-  var play = $('play');
-
-  var controls = [
-    'play', 'back', 'forward',
-    'pen', 'eraser', 'size'
-  ];
-
-  var strokes = [];
-  var current = null;
-  var pending = [];
-  var activePointer = null;
-  var frame = 0;
-
-  var tool = 'pen';
-  var color = '#ffe86c';
-  var size = 5;
-  var objectURL = null;
-  var loaded = false;
-
-  var view = {
-    w: 1000,
-    h: 562.5,
-    dpr: 1
-  };
-
-  function feedback(message) {
-    notice.textContent = message;
-  }
-
-  function available() {
-    return loaded && v.paused && !v.seeking;
-  }
+  function feedback(message) { notice.textContent = message; }
+  function available() { return loaded && v.paused && !v.seeking; }
 
   function enable() {
-    controls.forEach(function (id) {
-      $(id).disabled = !loaded;
-    });
-
+    controls.forEach(function (id) { $(id).disabled = !loaded; });
     seek.disabled = !loaded;
-
-    document.querySelectorAll('.swatch')
-      .forEach(function (b) {
-        b.disabled = !loaded;
-      });
-
+    document.querySelectorAll('.swatch').forEach(function (b) { b.disabled = !loaded; });
     historyButtons();
   }
 
   function historyButtons() {
-    $('undo').disabled =
-      !loaded || strokes.length === 0;
-
-    $('clear').disabled =
-      !loaded || strokes.length === 0;
+    $('undo').disabled = !loaded || strokes.length === 0;
+    $('clear').disabled = !loaded || strokes.length === 0;
   }
 
   function clock(seconds) {
     if (!isFinite(seconds)) seconds = 0;
-
     var hours = Math.floor(seconds / 3600);
     var minutes = Math.floor(seconds / 60) % 60;
     var secs = Math.floor(seconds % 60);
-
     return (hours ? hours + ':' : '') +
-      (hours
-        ? ('0' + minutes).slice(-2)
-        : minutes < 10 ? '0' + minutes : minutes) +
+      (hours ? ('0' + minutes).slice(-2) : minutes < 10 ? '0' + minutes : minutes) +
       ':' + ('0' + secs).slice(-2);
   }
 
   function update() {
-    play.textContent =
-      v.paused ? '▶ Riproduci' : '❚❚ Pausa';
-
-    $('clock').textContent =
-      clock(v.currentTime) +
-      ' / ' +
-      clock(v.duration);
-
+    play.textContent = v.paused ? '▶ Riproduci' : '❚❚ Pausa';
+    $('clock').textContent = clock(v.currentTime) + ' / ' + clock(v.duration);
     if (isFinite(v.duration) && v.duration > 0) {
-      seek.value = Math.round(
-        v.currentTime / v.duration * 1000
-      );
+      seek.value = Math.round(v.currentTime / v.duration * 1000);
     }
-
-    canvas.style.pointerEvents =
-      available() ? 'auto' : 'none';
+    canvas.style.pointerEvents = available() ? 'auto' : 'none';
   }
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
-
+  function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
   function fromEvent(e) {
     var rect = canvas.getBoundingClientRect();
-
     return {
-      x: clamp(
-        (e.clientX - rect.left) / (rect.width || 1),
-        0, 1
-      ),
-      y: clamp(
-        (e.clientY - rect.top) / (rect.height || 1),
-        0, 1
-      )
+      x: clamp((e.clientX - rect.left) / (rect.width || 1), 0, 1),
+      y: clamp((e.clientY - rect.top) / (rect.height || 1), 0, 1)
     };
   }
-
-  function xPx(p) {
-    return p.x * view.w;
-  }
-
-  function yPx(p) {
-    return p.y * view.h;
-  }
-
-  function midpoint(a, b) {
-    return {
-      x: (a.x + b.x) / 2,
-      y: (a.y + b.y) / 2
-    };
-  }
-
+  function xPx(p) { return p.x * view.w; }
+  function yPx(p) { return p.y * view.h; }
+  function midpoint(a, b) { return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; }
   function distance(a, b) {
-    return Math.hypot(
-      (a.x - b.x) * view.w,
-      (a.y - b.y) * view.h
-    );
+    return Math.hypot((a.x - b.x) * view.w, (a.y - b.y) * view.h);
   }
 
-  // Imposta penna o gomma
   function applyStyle(s) {
-    ctx.globalCompositeOperation =
-      s.tool === 'eraser'
-        ? 'destination-out'
-        : 'source-over';
-
-    ctx.strokeStyle =
-      s.tool === 'eraser' ? '#000000' : s.color;
-
+    ctx.globalCompositeOperation = s.tool === 'eraser' ? 'destination-out' : 'source-over';
+    ctx.strokeStyle = s.tool === 'eraser' ? '#000000' : s.color;
     ctx.fillStyle = ctx.strokeStyle;
-
-    ctx.lineWidth = Math.max(
-      1,
-      s.size * Math.max(0.55, view.w / 850)
-    );
-
+    // Consente tratti da circa mezzo pixel: nessun limite forzato a 1 px.
+    // Il fattore di scala viene contenuto per evitare tratti troppo grossi su iPad grandi.
+    ctx.lineWidth = Math.max(0.35, s.size * Math.max(0.8, Math.min(1.3, view.w / 1000)));
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
   }
 
-  // Disegna un punto iniziale
   function paintDot(s, p) {
-    ctx.save();
-    applyStyle(s);
-
+    ctx.save(); applyStyle(s);
     ctx.beginPath();
-    ctx.arc(
-      xPx(p),
-      yPx(p),
-      ctx.lineWidth / 2,
-      0,
-      Math.PI * 2
-    );
-
-    ctx.fill();
-    ctx.restore();
+    ctx.arc(xPx(p), yPx(p), ctx.lineWidth / 2, 0, Math.PI * 2);
+    ctx.fill(); ctx.restore();
   }
 
-  // NOVITÀ: disegna solo il segmento appena aggiunto
+  // Disegna solo il piccolo segmento nuovo, non tutta la lavagna.
   function paintNewSegment(s) {
     var n = s.points.length;
     if (n < 2) return;
-
-    var a = s.points[n - 2];
-    var b = s.points[n - 1];
+    var a = s.points[n - 2], b = s.points[n - 1];
     var middle = midpoint(a, b);
-
-    ctx.save();
-    applyStyle(s);
-    ctx.beginPath();
-
+    ctx.save(); applyStyle(s); ctx.beginPath();
     if (n === 2) {
       ctx.moveTo(xPx(a), yPx(a));
       ctx.lineTo(xPx(middle), yPx(middle));
     } else {
-      var priorMiddle = midpoint(
-        s.points[n - 3],
-        a
-      );
-
-      ctx.moveTo(
-        xPx(priorMiddle),
-        yPx(priorMiddle)
-      );
-
-      ctx.quadraticCurveTo(
-        xPx(a),
-        yPx(a),
-        xPx(middle),
-        yPx(middle)
-      );
+      var priorMiddle = midpoint(s.points[n - 3], a);
+      ctx.moveTo(xPx(priorMiddle), yPx(priorMiddle));
+      ctx.quadraticCurveTo(xPx(a), yPx(a), xPx(middle), yPx(middle));
     }
-
-    ctx.stroke();
-    ctx.restore();
+    ctx.stroke(); ctx.restore();
   }
 
   function paintEnd(s) {
     var n = s.points.length;
     if (n < 2) return;
-
-    var a = s.points[n - 2];
-    var b = s.points[n - 1];
+    var a = s.points[n - 2], b = s.points[n - 1];
     var middle = midpoint(a, b);
-
-    ctx.save();
-    applyStyle(s);
-    ctx.beginPath();
-
-    ctx.moveTo(
-      xPx(middle),
-      yPx(middle)
-    );
-
-    ctx.lineTo(
-      xPx(b),
-      yPx(b)
-    );
-
-    ctx.stroke();
-    ctx.restore();
+    ctx.save(); applyStyle(s); ctx.beginPath();
+    ctx.moveTo(xPx(middle), yPx(middle));
+    ctx.lineTo(xPx(b), yPx(b));
+    ctx.stroke(); ctx.restore();
   }
 
-  // Ricostruisce un tratto con curve morbide
+  // Ridisegno completo solo per Annulla, Cancella e rotazione dell'iPad.
   function renderStroke(s) {
     var pts = s.points;
     if (!pts.length) return;
-
-    if (pts.length === 1) {
-      paintDot(s, pts[0]);
-      return;
-    }
-
-    ctx.save();
-    applyStyle(s);
-    ctx.beginPath();
-
-    ctx.moveTo(
-      xPx(pts[0]),
-      yPx(pts[0])
-    );
-
+    if (pts.length === 1) { paintDot(s, pts[0]); return; }
+    ctx.save(); applyStyle(s); ctx.beginPath();
+    ctx.moveTo(xPx(pts[0]), yPx(pts[0]));
     for (var i = 1; i < pts.length; i++) {
-      var middle = midpoint(
-        pts[i - 1],
-        pts[i]
-      );
-
-      ctx.quadraticCurveTo(
-        xPx(pts[i - 1]),
-        yPx(pts[i - 1]),
-        xPx(middle),
-        yPx(middle)
-      );
+      var middle = midpoint(pts[i - 1], pts[i]);
+      ctx.quadraticCurveTo(xPx(pts[i - 1]), yPx(pts[i - 1]), xPx(middle), yPx(middle));
     }
-
     var last = pts[pts.length - 1];
-
-    ctx.lineTo(
-      xPx(last),
-      yPx(last)
-    );
-
-    ctx.stroke();
-    ctx.restore();
+    ctx.lineTo(xPx(last), yPx(last));
+    ctx.stroke(); ctx.restore();
   }
 
-  // Ridisegna solo quando necessario
   function redraw() {
-    ctx.clearRect(
-      0, 0,
-      view.w,
-      view.h
-    );
-
+    ctx.clearRect(0, 0, view.w, view.h);
     strokes.forEach(renderStroke);
-
-    if (current) {
-      renderStroke(current);
-    }
-
+    if (current) renderStroke(current);
     historyButtons();
   }
 
   function resize() {
     var rect = canvas.getBoundingClientRect();
-
-    var w = Math.max(1, rect.width);
-    var h = Math.max(1, rect.height);
-
-    // Limita la risoluzione per iPad meno recenti
-    var dpr = Math.min(
-      window.devicePixelRatio || 1,
-      2
-    );
-
-    if (
-      Math.abs(view.w - w) < 0.5 &&
-      Math.abs(view.h - h) < 0.5 &&
-      view.dpr === dpr
-    ) return;
-
-    view = {
-      w: w,
-      h: h,
-      dpr: dpr
-    };
-
+    var w = Math.max(1, rect.width), h = Math.max(1, rect.height);
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (Math.abs(view.w - w) < 0.5 && Math.abs(view.h - h) < 0.5 && view.dpr === dpr) return;
+    view = { w: w, h: h, dpr: dpr };
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
-
-    ctx.setTransform(
-      dpr, 0, 0, dpr, 0, 0
-    );
-
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     redraw();
   }
 
-  // NOVITÀ: stabilizzazione del tratto
+  // Stabilizzazione leggera: elimina micro-tremolii senza ritardare troppo la Pencil.
   function addPoint(p) {
     if (!current) return;
-
     var pts = current.points;
     var previous = pts[pts.length - 1];
-
     var d = distance(previous, p);
-
-    // Ignora i micro-tremolii
-    if (d < 0.65) return;
-
-    // Stabilizzazione adattiva:
-    // più morbida quando scrivi lentamente
-    var alpha =
-      d < 4 ? 0.43 :
-      d < 12 ? 0.67 :
-      0.88;
-
+    // Con la penna sottile manteniamo anche i movimenti piccoli delle lettere.
+    var fine = current.tool === 'pen' && current.size <= 1.2;
+    if (d < (fine ? 0.22 : 0.65)) return;
+    var alpha = fine ? (d < 4 ? 0.62 : (d < 12 ? 0.78 : 0.91))
+                     : (d < 4 ? 0.43 : (d < 12 ? 0.67 : 0.88));
     var smooth = {
-      x: previous.x +
-        (p.x - previous.x) * alpha,
-      y: previous.y +
-        (p.y - previous.y) * alpha
+      x: previous.x + (p.x - previous.x) * alpha,
+      y: previous.y + (p.y - previous.y) * alpha
     };
-
-    if (distance(previous, smooth) < 0.45) {
-      return;
-    }
-
+    if (distance(previous, smooth) < (fine ? 0.18 : 0.45)) return;
     pts.push(smooth);
-
-    // Non ridisegna tutti i tratti!
     paintNewSegment(current);
   }
 
-  // Raggruppa gli eventi della Pencil
   function flushPoints() {
     frame = 0;
-
-    if (!current) {
-      pending = [];
-      return;
-    }
-
+    if (!current) { pending = []; return; }
     var batch = pending;
     pending = [];
-
-    for (var i = 0; i < batch.length; i++) {
-      addPoint(batch[i]);
-    }
+    for (var i = 0; i < batch.length; i++) addPoint(batch[i]);
   }
 
   function schedulePaint() {
-    if (!frame) {
-      frame = requestAnimationFrame(
-        flushPoints
-      );
-    }
+    if (!frame) frame = requestAnimationFrame(flushPoints);
   }
 
   function queueEvent(e, useCoalesced) {
-    if (
-      useCoalesced &&
-      typeof e.getCoalescedEvents === 'function'
-    ) {
+    if (useCoalesced && typeof e.getCoalescedEvents === 'function') {
       var samples = e.getCoalescedEvents();
-
-      for (var i = 0; i < samples.length; i++) {
-        pending.push(fromEvent(samples[i]));
-      }
+      for (var i = 0; i < samples.length; i++) pending.push(fromEvent(samples[i]));
     }
-
+    // Include il punto finale anche quando getCoalescedEvents non lo restituisce.
     pending.push(fromEvent(e));
     schedulePaint();
   }
 
   function beginStroke(p, id) {
-    if (!available() || current) {
-      return false;
-    }
-
+    if (!available() || current) return false;
     activePointer = id;
     pending = [];
-
     current = {
       tool: tool,
       color: color,
-      size: tool === 'eraser'
-        ? size * 3
-        : size,
+      size: tool === 'eraser' ? size * 3 : size,
       points: [p]
     };
-
     paintDot(current, p);
-
     return true;
   }
 
   function finishStroke() {
     if (!current) return;
-
-    if (frame) {
-      cancelAnimationFrame(frame);
-      frame = 0;
-    }
-
+    if (frame) { cancelAnimationFrame(frame); frame = 0; }
     flushPoints();
     paintEnd(current);
-
     strokes.push(current);
-
     current = null;
     activePointer = null;
-
     historyButtons();
   }
 
   function wipe() {
-    if (frame) {
-      cancelAnimationFrame(frame);
-      frame = 0;
-    }
-
+    if (frame) { cancelAnimationFrame(frame); frame = 0; }
     pending = [];
     activePointer = null;
     current = null;
     strokes = [];
-
     redraw();
   }
 
   function setTool(t) {
     tool = t;
-
-    $('pen').classList.toggle(
-      'active',
-      t === 'pen'
-    );
-
-    $('eraser').classList.toggle(
-      'active',
-      t === 'eraser'
-    );
+    $('pen').classList.toggle('active', t === 'pen');
+    $('eraser').classList.toggle('active', t === 'eraser');
   }
 
   function togglePlayback() {
     if (!loaded) return;
-
     if (v.paused) {
       wipe();
-
       var promise = v.play();
-
-      if (promise && promise.catch) {
-        promise.catch(function () {
-          feedback(
-            'Safari non è riuscito a riprodurre il video. Tocca di nuovo Riproduci.'
-          );
-        });
-      }
+      if (promise && promise.catch) promise.catch(function () {
+        feedback('Safari non è riuscito a riprodurre il video. Tocca di nuovo Riproduci.');
+      });
     } else {
       v.pause();
     }
-
     update();
   }
 
-  // Caricamento video
   file.addEventListener('change', function () {
     var f = file.files && file.files[0];
     if (!f) return;
-
     v.pause();
     wipe();
-
-    if (objectURL) {
-      URL.revokeObjectURL(objectURL);
-    }
-
+    if (objectURL) URL.revokeObjectURL(objectURL);
     objectURL = URL.createObjectURL(f);
-
     v.src = objectURL;
     loaded = true;
     v.load();
-
     empty.style.display = 'none';
-
-    enable();
-    update();
-
-    feedback(
-      'Video selezionato: ' + f.name +
-      '. Premi Riproduci, poi Pausa per annotare.'
-    );
+    enable(); update();
+    feedback('Video selezionato: ' + f.name + '. Premi Riproduci, poi Pausa per annotare.');
   });
 
   v.addEventListener('loadedmetadata', function () {
-    update();
-    resize();
+    // Ripristina la velocità scelta anche quando carichi un altro video.
+    v.playbackRate = Number($('speed').value) || 1;
+    update(); resize();
   });
-
   v.addEventListener('timeupdate', update);
-
-  v.addEventListener('seeking', function () {
-    if (current) finishStroke();
-    update();
-  });
-
+  v.addEventListener('seeking', function () { if (current) finishStroke(); update(); });
   v.addEventListener('seeked', update);
-
   v.addEventListener('play', function () {
-    wipe();
-    update();
-
-    feedback(
-      'Video in riproduzione. Mettilo in pausa per scrivere.'
-    );
+    wipe(); update();
+    feedback('Video in riproduzione. Mettilo in pausa per scrivere.');
   });
-
   v.addEventListener('pause', function () {
     if (current) finishStroke();
     update();
-
-    if (loaded) {
-      feedback(
-        'Video in pausa: puoi scrivere sopra il fotogramma.'
-      );
-    }
+    if (loaded) feedback('Video in pausa: puoi scrivere sopra il fotogramma.');
   });
-
   v.addEventListener('ended', function () {
-    update();
-    feedback(
-      'Video terminato. Puoi tornare indietro e riprodurlo.'
-    );
+    update(); feedback('Video terminato. Puoi tornare indietro e riprodurlo.');
   });
-
   v.addEventListener('error', function () {
-    if (loaded) {
-      feedback(
-        'Questo video non si apre. Prova un file MP4 o MOV compatibile con Safari.'
-      );
-    }
+    if (loaded) feedback('Questo video non si apre. Prova un file MP4 o MOV compatibile con Safari.');
   });
 
-  // Controlli video
-  play.addEventListener(
-    'click',
-    togglePlayback
-  );
-
+  play.addEventListener('click', togglePlayback);
   $('back').addEventListener('click', function () {
     if (!loaded) return;
-
-    v.currentTime = Math.max(
-      0,
-      v.currentTime - 5
-    );
-
+    v.currentTime = Math.max(0, v.currentTime - 5);
     wipe();
   });
-
   $('forward').addEventListener('click', function () {
     if (!loaded) return;
-
-    v.currentTime = Math.min(
-      v.duration || 0,
-      v.currentTime + 5
-    );
-
+    v.currentTime = Math.min(v.duration || 0, v.currentTime + 5);
     wipe();
   });
-
   seek.addEventListener('input', function () {
-    if (
-      !loaded ||
-      !isFinite(v.duration)
-    ) return;
-
-    if (!v.paused) {
-      v.pause();
-    }
-
-    v.currentTime =
-      Number(seek.value) / 1000 * v.duration;
-
-    wipe();
-    update();
+    if (!loaded || !isFinite(v.duration)) return;
+    if (!v.paused) v.pause();
+    v.currentTime = Number(seek.value) / 1000 * v.duration;
+    wipe(); update();
   });
 
-  // Strumenti
-  $('pen').addEventListener('click', function () {
-    setTool('pen');
-  });
-
-  $('eraser').addEventListener('click', function () {
-    setTool('eraser');
-  });
-
+  $('pen').addEventListener('click', function () { setTool('pen'); });
+  $('eraser').addEventListener('click', function () { setTool('eraser'); });
   $('undo').addEventListener('click', function () {
     if (current) finishStroke();
-
-    if (strokes.length) {
-      strokes.pop();
-      redraw();
-    }
+    if (strokes.length) { strokes.pop(); redraw(); }
+  });
+  $('clear').addEventListener('click', wipe);
+  // Velocità del video: senza alterare il file originale.
+  $('speed').addEventListener('change', function () {
+    v.playbackRate = Number(this.value) || 1;
   });
 
-  $('clear').addEventListener('click', wipe);
-
+  // Spessori sottili: 0,5–17 con precisione di 0,1.
   $('size').addEventListener('input', function () {
     size = Number(this.value);
+    $('sizeValue').textContent = size.toFixed(1).replace('.', ',');
   });
 
-  document.querySelectorAll('.swatch')
-    .forEach(function (b) {
-      b.addEventListener('click', function () {
-        color = b.dataset.color;
-        setTool('pen');
-
-        document.querySelectorAll('.swatch')
-          .forEach(function (other) {
-            other.classList.toggle(
-              'selected',
-              other === b
-            );
-          });
-      });
+  // Tavolozza: 12 colori rapidi + selettore personalizzato.
+  function selectInkColor(c, selectedButton, isCustom) {
+    color = c;
+    setTool('pen');
+    document.querySelectorAll('.swatch').forEach(function (b) {
+      b.classList.toggle('selected', b === selectedButton);
     });
+    $('customWrap').classList.toggle('selected', !!isCustom);
+  }
+  document.querySelectorAll('.swatch').forEach(function (b) {
+    b.addEventListener('click', function () {
+      selectInkColor(b.dataset.color, b, false);
+    });
+  });
+  function customColorChanged() {
+    selectInkColor($('customColor').value, null, true);
+  }
+  $('customColor').addEventListener('input', customColorChanged);
+  $('customColor').addEventListener('change', customColorChanged);
 
-  // NOVITÀ: gestione Apple Pencil migliorata
+  // Schermo intero: prova la Fullscreen API dell'iPad; se Safari
+  // la rifiuta, rimane comunque una modalità LIM che occupa l'area utile.
+  var limActive = false;
+  function setLimLayout(active) {
+    limActive = active;
+    document.body.classList.toggle('lim-active', active);
+    workspace.classList.toggle('lim-active', active);
+    limButton.textContent = active ? '⤢ Esci LIM' : '⛶ Schermo intero';
+    limButton.setAttribute('aria-label', active ? 'Esci dalla modalità LIM' : 'Attiva modalità LIM a schermo intero');
+    requestAnimationFrame(resize);
+  }
+  function nativeFullscreenElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement;
+  }
+  function leaveLim() {
+    var nativeElement = nativeFullscreenElement();
+    if (nativeElement) {
+      var exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) {
+        try {
+          var result = exit.call(document);
+          if (result && result.catch) result.catch(function () {});
+        } catch (err) {}
+      }
+    }
+    setLimLayout(false);
+  }
+  limButton.addEventListener('click', function () {
+    if (limActive) { leaveLim(); return; }
+    if (!loaded) return;
+    setLimLayout(true);
+    var request = workspace.requestFullscreen || workspace.webkitRequestFullscreen;
+    if (request) {
+      try {
+        var result = request.call(workspace);
+        if (result && result.catch) {
+          // I browser che non autorizzano il vero fullscreen
+          // conservano il layout LIM a pagina intera.
+          result.catch(function () {});
+        }
+      } catch (err) {}
+    }
+  });
+  function fullscreenChanged() {
+    // Uscita con gesto di Safari o Esc: ripristina l'interfaccia normale.
+    if (limActive && !nativeFullscreenElement()) setLimLayout(false);
+    else requestAnimationFrame(resize);
+  }
+  document.addEventListener('fullscreenchange', fullscreenChanged);
+  document.addEventListener('webkitfullscreenchange', fullscreenChanged);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && limActive && !nativeFullscreenElement()) leaveLim();
+  });
+
+  // Pointer Events: Apple Pencil, dito e mouse. Cattura del puntatore per non perdere la fine del tratto.
   canvas.addEventListener('pointerdown', function (e) {
     if (!available() || current) return;
-
-    if (
-      e.pointerType === 'mouse' &&
-      e.button !== 0
-    ) return;
-
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (e.isPrimary === false) return;
-
     e.preventDefault();
-
     if (beginStroke(fromEvent(e), e.pointerId)) {
-      try {
-        canvas.setPointerCapture(e.pointerId);
-      } catch (_) {}
+      try { canvas.setPointerCapture(e.pointerId); } catch (_) {}
     }
   });
 
   canvas.addEventListener('pointermove', function (e) {
-    if (
-      !current ||
-      activePointer !== e.pointerId
-    ) return;
-
+    if (!current || activePointer !== e.pointerId) return;
     e.preventDefault();
-
     queueEvent(e, true);
   });
 
-  // Recupera il tratto anche se esce dal canvas
   function pointerFinish(e) {
-    if (
-      !current ||
-      activePointer !== e.pointerId
-    ) return;
-
-    if (e.cancelable) {
-      e.preventDefault();
-    }
-
-    if (e.type === 'pointerup') {
-      queueEvent(e, false);
-    }
-
+    if (!current || activePointer !== e.pointerId) return;
+    if (e.cancelable) e.preventDefault();
+    if (e.type === 'pointerup') queueEvent(e, false);
     finishStroke();
-
-    try {
-      if (canvas.hasPointerCapture(e.pointerId)) {
-        canvas.releasePointerCapture(e.pointerId);
-      }
-    } catch (_) {}
+    try { if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId); } catch (_) {}
   }
-
-  window.addEventListener(
-    'pointerup',
-    pointerFinish,
-    true
-  );
-
-  window.addEventListener(
-    'pointercancel',
-    pointerFinish,
-    true
-  );
-
-  canvas.addEventListener(
-    'lostpointercapture',
-    function (e) {
-      if (
-        current &&
-        activePointer === e.pointerId
-      ) {
-        finishStroke();
-      }
-    }
-  );
-
-  // Compatibilità con browser senza Pointer Events
-  if (!window.PointerEvent) {
-
-    canvas.addEventListener('touchstart', function (e) {
-      if (!available() || e.touches.length !== 1) {
-        return;
-      }
-
-      e.preventDefault();
-
-      beginStroke(
-        fromEvent(e.touches[0]),
-        'touch'
-      );
-
-    }, { passive: false });
-
-    canvas.addEventListener('touchmove', function (e) {
-      if (
-        !current ||
-        activePointer !== 'touch'
-      ) return;
-
-      e.preventDefault();
-
-      if (e.touches.length) {
-        pending.push(
-          fromEvent(e.touches[0])
-        );
-        schedulePaint();
-      }
-
-    }, { passive: false });
-
-    canvas.addEventListener('touchend', function (e) {
-      if (
-        !current ||
-        activePointer !== 'touch'
-      ) return;
-
-      e.preventDefault();
-
-      if (e.changedTouches.length) {
-        pending.push(
-          fromEvent(e.changedTouches[0])
-        );
-      }
-
-      finishStroke();
-
-    }, { passive: false });
-
-    canvas.addEventListener('touchcancel', function (e) {
-      if (
-        !current ||
-        activePointer !== 'touch'
-      ) return;
-
-      e.preventDefault();
-      finishStroke();
-
-    }, { passive: false });
-  }
-
-  // NOVITÀ: blocca selezione e gesti indesiderati
-  [
-    'contextmenu',
-    'selectstart',
-    'dragstart',
-    'gesturestart',
-    'gesturechange'
-  ].forEach(function (type) {
-    stage.addEventListener(type, function (e) {
-      if (e.cancelable) {
-        e.preventDefault();
-      }
-    });
+  // window cattura pointerup/cancel anche se Safari fa uscire la Pencil dal canvas.
+  window.addEventListener('pointerup', pointerFinish, true);
+  window.addEventListener('pointercancel', pointerFinish, true);
+  canvas.addEventListener('lostpointercapture', function (e) {
+    if (current && activePointer === e.pointerId) finishStroke();
   });
 
-  stage.addEventListener(
-    'touchmove',
-    function (e) {
-      if (available() && e.cancelable) {
-        e.preventDefault();
-      }
-    },
-    { passive: false }
-  );
-
-  window.addEventListener('resize', resize);
-
-  if (window.ResizeObserver) {
-    new ResizeObserver(resize).observe(stage);
+  // Fallback per browser che non supportano Pointer Events.
+  if (!window.PointerEvent) {
+    canvas.addEventListener('touchstart', function (e) {
+      if (!available() || e.touches.length !== 1) return;
+      e.preventDefault();
+      beginStroke(fromEvent(e.touches[0]), 'touch');
+    }, { passive: false });
+    canvas.addEventListener('touchmove', function (e) {
+      if (!current || activePointer !== 'touch') return;
+      e.preventDefault();
+      if (e.touches.length) { pending.push(fromEvent(e.touches[0])); schedulePaint(); }
+    }, { passive: false });
+    canvas.addEventListener('touchend', function (e) {
+      if (!current || activePointer !== 'touch') return;
+      e.preventDefault();
+      if (e.changedTouches.length) pending.push(fromEvent(e.changedTouches[0]));
+      finishStroke();
+    }, { passive: false });
+    canvas.addEventListener('touchcancel', function (e) {
+      if (!current || activePointer !== 'touch') return;
+      e.preventDefault(); finishStroke();
+    }, { passive: false });
   }
 
-  document.addEventListener(
-    'visibilitychange',
-    function () {
-      if (document.hidden) {
-        if (current) finishStroke();
-        if (!v.paused) v.pause();
-      }
+  // Impedisce i menu di selezione, il rettangolo evidenziato e i gesti di Safari nell'area video.
+  ['contextmenu', 'selectstart', 'dragstart', 'gesturestart', 'gesturechange'].forEach(function (type) {
+    stage.addEventListener(type, function (e) { if (e.cancelable) e.preventDefault(); });
+  });
+  stage.addEventListener('touchmove', function (e) {
+    if (available() && e.cancelable) e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) {
+      if (current) finishStroke();
+      if (!v.paused) v.pause();
     }
-  );
+  });
 
-  enable();
-  resize();
-  update();
-
+  enable(); resize(); update();
 })();
 </script>
-
 </body>
 </html>
