@@ -11,6 +11,26 @@
 <style>
 :root{color-scheme:dark;--bg:#0e1420;--card:#1c2636;--line:#354255;--txt:#f1f5ff;--mute:#b6c3d7;--accent:#8bbaff}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif}button,input{font:inherit}button{cursor:pointer;border:1px solid var(--line);border-radius:12px;background:#26344a;color:var(--txt);min-height:46px;padding:10px 14px}button:disabled{opacity:.38;cursor:default}button:focus-visible,.file:focus-within{outline:3px solid var(--accent)}.primary{background:#5b96f2;color:#09172a;font-weight:750;border-color:#78aaff}.active{outline:2px solid #90baff;background:#354b6d}.shell{max-width:1060px;margin:auto;padding:clamp(12px,2vw,22px) 14px 30px}.heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.brand{font-weight:800;font-size:23px;letter-spacing:-.5px}.sub{color:var(--mute);font-size:13px}.file{position:relative;display:inline-flex;align-items:center;justify-content:center;padding:11px 14px;min-height:46px;border-radius:12px;background:#5b96f2;color:#09172a;font-weight:700;cursor:pointer;white-space:nowrap}.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}.stage{position:relative;overflow:hidden;border:1px solid #354255;border-radius:15px;background:#090d14;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;isolation:isolate}.stage video{height:100%;width:100%;display:block;object-fit:contain}.stage canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;z-index:2;pointer-events:none}.empty{position:absolute;z-index:3;pointer-events:none;color:#d0daec;text-align:center;padding:18px}.empty strong{display:block;font-size:20px;margin-bottom:8px}.empty small{color:#a8b7ce}.notice{font-size:14px;margin:10px 0;color:#bfcde2;min-height:20px}.panel{padding:14px;border-radius:15px;background:var(--card);margin-top:10px}.topline,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.topline{margin-bottom:12px}.spacer{flex:1}.time{font-size:13px;color:#ccdaf0;white-space:nowrap;font-variant-numeric:tabular-nums}.seek{width:100%;accent-color:#91bcff;height:25px;margin:0 0 3px}.tools{gap:8px}.tools .separator{width:1px;height:30px;background:var(--line);margin:0 2px}.swatches{display:flex;gap:7px}.swatch{width:38px;height:38px;min-height:38px;padding:0;border:3px solid #26344a;outline:1px solid #63748b;border-radius:50%;background:var(--swatch)}.swatch.selected{border-color:#e8f2ff;outline:2px solid #9bbfff}.widthpick{display:flex;gap:7px;align-items:center;color:var(--mute);font-size:13px}.widthpick input{width:92px;accent-color:#91bcff}.help{font-size:13px;line-height:1.5;color:#aabbd2;margin:12px 4px}.status{display:inline-block;min-width:90px;color:#c0d8ff;font-size:13px}.warn{color:#ffd4a5}@media(max-width:680px){.brand{font-size:20px}.file{font-size:13px}.panel{padding:10px}.topline button{padding:8px 10px}.tools{gap:6px}.swatch{width:35px;height:35px;min-height:35px}.widthpick input{width:70px}}@media(orientation:landscape) and (max-height:700px){.shell{padding-top:8px}.heading{margin-bottom:7px}.panel{padding:9px;margin-top:8px}.help{margin-top:6px}}
+
+/* Impedisce la selezione accidentale del video */
+.stage,
+.stage * {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage,
+.stage canvas {
+  touch-action: none;
+}
+
+.stage video {
+  pointer-events: none;
+}
+
 </style>
 </head>
 <body>
@@ -25,40 +45,873 @@
  </div>
  <p class="help">Funziona anche con il dito. Per evitare segni involontari, puoi scrivere solo quando il video è in pausa. Le annotazioni vengono cancellate quando premi Riproduci o cambi il punto del video. Il video originale non viene modificato né caricato online.</p>
 </main>
+
 <script>
-(function(){'use strict';
- var $=function(id){return document.getElementById(id)};
- var v=$('video'),canvas=$('ink'),ctx=canvas.getContext('2d'),stage=$('stage'),empty=$('empty'),notice=$('notice'),file=$('file'),seek=$('seek'),play=$('play');
- var controls=['play','back','forward','pen','eraser','undo','clear','size'];
- var strokes=[],current=null,tool='pen',color='#ffe86c',size=5,objectURL=null,loaded=false,drawing=false,wasSeeking=false;
- var modelSize={w:1000,h:562.5};
- function feedback(msg){notice.textContent=msg}
- function available(){return loaded && v.paused}
- function enable(){controls.forEach(function(id){$(id).disabled=!loaded});seek.disabled=!loaded;document.querySelectorAll('.swatch').forEach(function(el){el.disabled=!loaded})}
- function clock(s){if(!isFinite(s))s=0;var h=Math.floor(s/3600),m=Math.floor(s/60)%60,x=Math.floor(s%60);return (h?h+':':'')+(h?('0'+m).slice(-2):m<10?'0'+m:m)+':'+('0'+x).slice(-2)}
- function update(){play.textContent=v.paused?'▶ Riproduci':'❚❚ Pausa';$('clock').textContent=clock(v.currentTime)+' / '+clock(v.duration);if(isFinite(v.duration)&&v.duration>0)seek.value=Math.round(v.currentTime/v.duration*1000);if(loaded)canvas.style.pointerEvents=v.paused?'auto':'none';}
- function resize(){var box=stage.getBoundingClientRect(),ratio=Math.min(window.devicePixelRatio||1,2);modelSize={w:box.width,h:box.height};canvas.width=Math.round(box.width*ratio);canvas.height=Math.round(box.height*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);redraw()}
- function point(ev){var r=canvas.getBoundingClientRect();return {x:(ev.clientX-r.left)/r.width,y:(ev.clientY-r.top)/r.height}}
- function renderStroke(s){if(!s.points.length)return;ctx.save();ctx.globalCompositeOperation=s.tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=s.tool==='eraser'?'rgba(0,0,0,1)':s.color;ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=s.size*Math.max(.5,modelSize.w/850);ctx.lineJoin='round';ctx.lineCap='round';ctx.beginPath();s.points.forEach(function(p,i){var x=p.x*modelSize.w,y=p.y*modelSize.h;if(!i)ctx.moveTo(x,y);else ctx.lineTo(x,y)});if(s.points.length===1){var p=s.points[0];ctx.arc(p.x*modelSize.w,p.y*modelSize.h,Math.max(1,ctx.lineWidth/2),0,Math.PI*2);ctx.fill()}else ctx.stroke();ctx.restore()}
- function redraw(){ctx.clearRect(0,0,modelSize.w,modelSize.h);strokes.forEach(renderStroke);if(current)renderStroke(current);$('undo').disabled=!loaded||!strokes.length;$('clear').disabled=!loaded||!strokes.length}
- function wipe(){strokes=[];current=null;drawing=false;redraw()}
- function setTool(t){tool=t;$('pen').classList.toggle('active',t==='pen');$('eraser').classList.toggle('active',t==='eraser')}
- function pause(){if(!loaded)return;if(v.paused){wipe();var p=v.play();if(p&&p.catch)p.catch(function(){feedback('Safari non è riuscito a riprodurre questo video. Prova a toccare ancora Riproduci.')})}else v.pause();update()}
- file.addEventListener('change',function(){var f=file.files&&file.files[0];if(!f)return;if(objectURL)URL.revokeObjectURL(objectURL);objectURL=URL.createObjectURL(f);v.pause();v.removeAttribute('src');v.load();loaded=true;v.src=objectURL;v.load();empty.style.display='none';wipe();enable();update();feedback('Video selezionato: '+f.name+'. Premi Riproduci, poi Pausa per annotare.')});
- v.addEventListener('loadedmetadata',function(){update();resize()});v.addEventListener('timeupdate',update);v.addEventListener('play',function(){wipe();update();feedback('Video in riproduzione. Mettilo in pausa per scrivere.')});v.addEventListener('pause',function(){update();if(loaded)feedback('Video in pausa: puoi scrivere sopra il fotogramma.')});v.addEventListener('ended',function(){update();feedback('Video terminato. Puoi tornare indietro e riprodurlo.')});v.addEventListener('error',function(){feedback('Questo video non si apre. Prova un file MP4 o MOV compatibile con Safari.')});
- play.addEventListener('click',pause);$('back').addEventListener('click',function(){if(!loaded)return;v.currentTime=Math.max(0,v.currentTime-5);wipe()});$('forward').addEventListener('click',function(){if(!loaded)return;v.currentTime=Math.min(v.duration||0,v.currentTime+5);wipe()});
- seek.addEventListener('input',function(){if(!loaded||!isFinite(v.duration))return;if(!v.paused){v.pause();wasSeeking=true}v.currentTime=Number(seek.value)/1000*v.duration;wipe();update()});seek.addEventListener('change',function(){wasSeeking=false});
- $('pen').addEventListener('click',function(){setTool('pen')});$('eraser').addEventListener('click',function(){setTool('eraser')});$('undo').addEventListener('click',function(){if(strokes.length){strokes.pop();redraw()}});$('clear').addEventListener('click',wipe);
- $('size').addEventListener('input',function(){size=Number(this.value)});document.querySelectorAll('.swatch').forEach(function(el){el.addEventListener('click',function(){color=el.dataset.color;setTool('pen');document.querySelectorAll('.swatch').forEach(function(b){b.classList.toggle('selected',b===el)})})});
- canvas.addEventListener('pointerdown',function(e){if(!available())return;if(e.pointerType==='mouse'&&e.button!==0)return;e.preventDefault();drawing=true;current={tool:tool,color:color,size:tool==='eraser'?size*3:size,points:[point(e)]};if(canvas.setPointerCapture)try{canvas.setPointerCapture(e.pointerId)}catch(_){}redraw()});
- canvas.addEventListener('pointermove',function(e){if(!drawing||!current)return;e.preventDefault();current.points.push(point(e));redraw()});
- function finish(e){if(!drawing||!current)return;drawing=false;current.points.push(point(e));strokes.push(current);current=null;redraw()}
- canvas.addEventListener('pointerup',finish);canvas.addEventListener('pointercancel',function(){if(current){strokes.push(current);current=null;drawing=false;redraw()}});
- canvas.addEventListener('contextmenu',function(e){e.preventDefault()});
- window.addEventListener('resize',resize);if(window.ResizeObserver){new ResizeObserver(resize).observe(stage)}
- document.addEventListener('visibilitychange',function(){if(document.hidden&&!v.paused)v.pause()});
- enable();resize();update();
+(function () {
+  'use strict';
+
+  var $ = function (id) {
+    return document.getElementById(id);
+  };
+
+  var v = $('video');
+  var canvas = $('ink');
+  var ctx = canvas.getContext('2d');
+  var stage = $('stage');
+  var empty = $('empty');
+  var notice = $('notice');
+  var file = $('file');
+  var seek = $('seek');
+  var play = $('play');
+
+  var controls = [
+    'play', 'back', 'forward',
+    'pen', 'eraser', 'size'
+  ];
+
+  var strokes = [];
+  var current = null;
+  var pending = [];
+  var activePointer = null;
+  var frame = 0;
+
+  var tool = 'pen';
+  var color = '#ffe86c';
+  var size = 5;
+  var objectURL = null;
+  var loaded = false;
+
+  var view = {
+    w: 1000,
+    h: 562.5,
+    dpr: 1
+  };
+
+  function feedback(message) {
+    notice.textContent = message;
+  }
+
+  function available() {
+    return loaded && v.paused && !v.seeking;
+  }
+
+  function enable() {
+    controls.forEach(function (id) {
+      $(id).disabled = !loaded;
+    });
+
+    seek.disabled = !loaded;
+
+    document.querySelectorAll('.swatch')
+      .forEach(function (b) {
+        b.disabled = !loaded;
+      });
+
+    historyButtons();
+  }
+
+  function historyButtons() {
+    $('undo').disabled =
+      !loaded || strokes.length === 0;
+
+    $('clear').disabled =
+      !loaded || strokes.length === 0;
+  }
+
+  function clock(seconds) {
+    if (!isFinite(seconds)) seconds = 0;
+
+    var hours = Math.floor(seconds / 3600);
+    var minutes = Math.floor(seconds / 60) % 60;
+    var secs = Math.floor(seconds % 60);
+
+    return (hours ? hours + ':' : '') +
+      (hours
+        ? ('0' + minutes).slice(-2)
+        : minutes < 10 ? '0' + minutes : minutes) +
+      ':' + ('0' + secs).slice(-2);
+  }
+
+  function update() {
+    play.textContent =
+      v.paused ? '▶ Riproduci' : '❚❚ Pausa';
+
+    $('clock').textContent =
+      clock(v.currentTime) +
+      ' / ' +
+      clock(v.duration);
+
+    if (isFinite(v.duration) && v.duration > 0) {
+      seek.value = Math.round(
+        v.currentTime / v.duration * 1000
+      );
+    }
+
+    canvas.style.pointerEvents =
+      available() ? 'auto' : 'none';
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function fromEvent(e) {
+    var rect = canvas.getBoundingClientRect();
+
+    return {
+      x: clamp(
+        (e.clientX - rect.left) / (rect.width || 1),
+        0, 1
+      ),
+      y: clamp(
+        (e.clientY - rect.top) / (rect.height || 1),
+        0, 1
+      )
+    };
+  }
+
+  function xPx(p) {
+    return p.x * view.w;
+  }
+
+  function yPx(p) {
+    return p.y * view.h;
+  }
+
+  function midpoint(a, b) {
+    return {
+      x: (a.x + b.x) / 2,
+      y: (a.y + b.y) / 2
+    };
+  }
+
+  function distance(a, b) {
+    return Math.hypot(
+      (a.x - b.x) * view.w,
+      (a.y - b.y) * view.h
+    );
+  }
+
+  // Imposta penna o gomma
+  function applyStyle(s) {
+    ctx.globalCompositeOperation =
+      s.tool === 'eraser'
+        ? 'destination-out'
+        : 'source-over';
+
+    ctx.strokeStyle =
+      s.tool === 'eraser' ? '#000000' : s.color;
+
+    ctx.fillStyle = ctx.strokeStyle;
+
+    ctx.lineWidth = Math.max(
+      1,
+      s.size * Math.max(0.55, view.w / 850)
+    );
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  // Disegna un punto iniziale
+  function paintDot(s, p) {
+    ctx.save();
+    applyStyle(s);
+
+    ctx.beginPath();
+    ctx.arc(
+      xPx(p),
+      yPx(p),
+      ctx.lineWidth / 2,
+      0,
+      Math.PI * 2
+    );
+
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // NOVITÀ: disegna solo il segmento appena aggiunto
+  function paintNewSegment(s) {
+    var n = s.points.length;
+    if (n < 2) return;
+
+    var a = s.points[n - 2];
+    var b = s.points[n - 1];
+    var middle = midpoint(a, b);
+
+    ctx.save();
+    applyStyle(s);
+    ctx.beginPath();
+
+    if (n === 2) {
+      ctx.moveTo(xPx(a), yPx(a));
+      ctx.lineTo(xPx(middle), yPx(middle));
+    } else {
+      var priorMiddle = midpoint(
+        s.points[n - 3],
+        a
+      );
+
+      ctx.moveTo(
+        xPx(priorMiddle),
+        yPx(priorMiddle)
+      );
+
+      ctx.quadraticCurveTo(
+        xPx(a),
+        yPx(a),
+        xPx(middle),
+        yPx(middle)
+      );
+    }
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function paintEnd(s) {
+    var n = s.points.length;
+    if (n < 2) return;
+
+    var a = s.points[n - 2];
+    var b = s.points[n - 1];
+    var middle = midpoint(a, b);
+
+    ctx.save();
+    applyStyle(s);
+    ctx.beginPath();
+
+    ctx.moveTo(
+      xPx(middle),
+      yPx(middle)
+    );
+
+    ctx.lineTo(
+      xPx(b),
+      yPx(b)
+    );
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Ricostruisce un tratto con curve morbide
+  function renderStroke(s) {
+    var pts = s.points;
+    if (!pts.length) return;
+
+    if (pts.length === 1) {
+      paintDot(s, pts[0]);
+      return;
+    }
+
+    ctx.save();
+    applyStyle(s);
+    ctx.beginPath();
+
+    ctx.moveTo(
+      xPx(pts[0]),
+      yPx(pts[0])
+    );
+
+    for (var i = 1; i < pts.length; i++) {
+      var middle = midpoint(
+        pts[i - 1],
+        pts[i]
+      );
+
+      ctx.quadraticCurveTo(
+        xPx(pts[i - 1]),
+        yPx(pts[i - 1]),
+        xPx(middle),
+        yPx(middle)
+      );
+    }
+
+    var last = pts[pts.length - 1];
+
+    ctx.lineTo(
+      xPx(last),
+      yPx(last)
+    );
+
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // Ridisegna solo quando necessario
+  function redraw() {
+    ctx.clearRect(
+      0, 0,
+      view.w,
+      view.h
+    );
+
+    strokes.forEach(renderStroke);
+
+    if (current) {
+      renderStroke(current);
+    }
+
+    historyButtons();
+  }
+
+  function resize() {
+    var rect = canvas.getBoundingClientRect();
+
+    var w = Math.max(1, rect.width);
+    var h = Math.max(1, rect.height);
+
+    // Limita la risoluzione per iPad meno recenti
+    var dpr = Math.min(
+      window.devicePixelRatio || 1,
+      2
+    );
+
+    if (
+      Math.abs(view.w - w) < 0.5 &&
+      Math.abs(view.h - h) < 0.5 &&
+      view.dpr === dpr
+    ) return;
+
+    view = {
+      w: w,
+      h: h,
+      dpr: dpr
+    };
+
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+
+    ctx.setTransform(
+      dpr, 0, 0, dpr, 0, 0
+    );
+
+    redraw();
+  }
+
+  // NOVITÀ: stabilizzazione del tratto
+  function addPoint(p) {
+    if (!current) return;
+
+    var pts = current.points;
+    var previous = pts[pts.length - 1];
+
+    var d = distance(previous, p);
+
+    // Ignora i micro-tremolii
+    if (d < 0.65) return;
+
+    // Stabilizzazione adattiva:
+    // più morbida quando scrivi lentamente
+    var alpha =
+      d < 4 ? 0.43 :
+      d < 12 ? 0.67 :
+      0.88;
+
+    var smooth = {
+      x: previous.x +
+        (p.x - previous.x) * alpha,
+      y: previous.y +
+        (p.y - previous.y) * alpha
+    };
+
+    if (distance(previous, smooth) < 0.45) {
+      return;
+    }
+
+    pts.push(smooth);
+
+    // Non ridisegna tutti i tratti!
+    paintNewSegment(current);
+  }
+
+  // Raggruppa gli eventi della Pencil
+  function flushPoints() {
+    frame = 0;
+
+    if (!current) {
+      pending = [];
+      return;
+    }
+
+    var batch = pending;
+    pending = [];
+
+    for (var i = 0; i < batch.length; i++) {
+      addPoint(batch[i]);
+    }
+  }
+
+  function schedulePaint() {
+    if (!frame) {
+      frame = requestAnimationFrame(
+        flushPoints
+      );
+    }
+  }
+
+  function queueEvent(e, useCoalesced) {
+    if (
+      useCoalesced &&
+      typeof e.getCoalescedEvents === 'function'
+    ) {
+      var samples = e.getCoalescedEvents();
+
+      for (var i = 0; i < samples.length; i++) {
+        pending.push(fromEvent(samples[i]));
+      }
+    }
+
+    pending.push(fromEvent(e));
+    schedulePaint();
+  }
+
+  function beginStroke(p, id) {
+    if (!available() || current) {
+      return false;
+    }
+
+    activePointer = id;
+    pending = [];
+
+    current = {
+      tool: tool,
+      color: color,
+      size: tool === 'eraser'
+        ? size * 3
+        : size,
+      points: [p]
+    };
+
+    paintDot(current, p);
+
+    return true;
+  }
+
+  function finishStroke() {
+    if (!current) return;
+
+    if (frame) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    }
+
+    flushPoints();
+    paintEnd(current);
+
+    strokes.push(current);
+
+    current = null;
+    activePointer = null;
+
+    historyButtons();
+  }
+
+  function wipe() {
+    if (frame) {
+      cancelAnimationFrame(frame);
+      frame = 0;
+    }
+
+    pending = [];
+    activePointer = null;
+    current = null;
+    strokes = [];
+
+    redraw();
+  }
+
+  function setTool(t) {
+    tool = t;
+
+    $('pen').classList.toggle(
+      'active',
+      t === 'pen'
+    );
+
+    $('eraser').classList.toggle(
+      'active',
+      t === 'eraser'
+    );
+  }
+
+  function togglePlayback() {
+    if (!loaded) return;
+
+    if (v.paused) {
+      wipe();
+
+      var promise = v.play();
+
+      if (promise && promise.catch) {
+        promise.catch(function () {
+          feedback(
+            'Safari non è riuscito a riprodurre il video. Tocca di nuovo Riproduci.'
+          );
+        });
+      }
+    } else {
+      v.pause();
+    }
+
+    update();
+  }
+
+  // Caricamento video
+  file.addEventListener('change', function () {
+    var f = file.files && file.files[0];
+    if (!f) return;
+
+    v.pause();
+    wipe();
+
+    if (objectURL) {
+      URL.revokeObjectURL(objectURL);
+    }
+
+    objectURL = URL.createObjectURL(f);
+
+    v.src = objectURL;
+    loaded = true;
+    v.load();
+
+    empty.style.display = 'none';
+
+    enable();
+    update();
+
+    feedback(
+      'Video selezionato: ' + f.name +
+      '. Premi Riproduci, poi Pausa per annotare.'
+    );
+  });
+
+  v.addEventListener('loadedmetadata', function () {
+    update();
+    resize();
+  });
+
+  v.addEventListener('timeupdate', update);
+
+  v.addEventListener('seeking', function () {
+    if (current) finishStroke();
+    update();
+  });
+
+  v.addEventListener('seeked', update);
+
+  v.addEventListener('play', function () {
+    wipe();
+    update();
+
+    feedback(
+      'Video in riproduzione. Mettilo in pausa per scrivere.'
+    );
+  });
+
+  v.addEventListener('pause', function () {
+    if (current) finishStroke();
+    update();
+
+    if (loaded) {
+      feedback(
+        'Video in pausa: puoi scrivere sopra il fotogramma.'
+      );
+    }
+  });
+
+  v.addEventListener('ended', function () {
+    update();
+    feedback(
+      'Video terminato. Puoi tornare indietro e riprodurlo.'
+    );
+  });
+
+  v.addEventListener('error', function () {
+    if (loaded) {
+      feedback(
+        'Questo video non si apre. Prova un file MP4 o MOV compatibile con Safari.'
+      );
+    }
+  });
+
+  // Controlli video
+  play.addEventListener(
+    'click',
+    togglePlayback
+  );
+
+  $('back').addEventListener('click', function () {
+    if (!loaded) return;
+
+    v.currentTime = Math.max(
+      0,
+      v.currentTime - 5
+    );
+
+    wipe();
+  });
+
+  $('forward').addEventListener('click', function () {
+    if (!loaded) return;
+
+    v.currentTime = Math.min(
+      v.duration || 0,
+      v.currentTime + 5
+    );
+
+    wipe();
+  });
+
+  seek.addEventListener('input', function () {
+    if (
+      !loaded ||
+      !isFinite(v.duration)
+    ) return;
+
+    if (!v.paused) {
+      v.pause();
+    }
+
+    v.currentTime =
+      Number(seek.value) / 1000 * v.duration;
+
+    wipe();
+    update();
+  });
+
+  // Strumenti
+  $('pen').addEventListener('click', function () {
+    setTool('pen');
+  });
+
+  $('eraser').addEventListener('click', function () {
+    setTool('eraser');
+  });
+
+  $('undo').addEventListener('click', function () {
+    if (current) finishStroke();
+
+    if (strokes.length) {
+      strokes.pop();
+      redraw();
+    }
+  });
+
+  $('clear').addEventListener('click', wipe);
+
+  $('size').addEventListener('input', function () {
+    size = Number(this.value);
+  });
+
+  document.querySelectorAll('.swatch')
+    .forEach(function (b) {
+      b.addEventListener('click', function () {
+        color = b.dataset.color;
+        setTool('pen');
+
+        document.querySelectorAll('.swatch')
+          .forEach(function (other) {
+            other.classList.toggle(
+              'selected',
+              other === b
+            );
+          });
+      });
+    });
+
+  // NOVITÀ: gestione Apple Pencil migliorata
+  canvas.addEventListener('pointerdown', function (e) {
+    if (!available() || current) return;
+
+    if (
+      e.pointerType === 'mouse' &&
+      e.button !== 0
+    ) return;
+
+    if (e.isPrimary === false) return;
+
+    e.preventDefault();
+
+    if (beginStroke(fromEvent(e), e.pointerId)) {
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch (_) {}
+    }
+  });
+
+  canvas.addEventListener('pointermove', function (e) {
+    if (
+      !current ||
+      activePointer !== e.pointerId
+    ) return;
+
+    e.preventDefault();
+
+    queueEvent(e, true);
+  });
+
+  // Recupera il tratto anche se esce dal canvas
+  function pointerFinish(e) {
+    if (
+      !current ||
+      activePointer !== e.pointerId
+    ) return;
+
+    if (e.cancelable) {
+      e.preventDefault();
+    }
+
+    if (e.type === 'pointerup') {
+      queueEvent(e, false);
+    }
+
+    finishStroke();
+
+    try {
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    } catch (_) {}
+  }
+
+  window.addEventListener(
+    'pointerup',
+    pointerFinish,
+    true
+  );
+
+  window.addEventListener(
+    'pointercancel',
+    pointerFinish,
+    true
+  );
+
+  canvas.addEventListener(
+    'lostpointercapture',
+    function (e) {
+      if (
+        current &&
+        activePointer === e.pointerId
+      ) {
+        finishStroke();
+      }
+    }
+  );
+
+  // Compatibilità con browser senza Pointer Events
+  if (!window.PointerEvent) {
+
+    canvas.addEventListener('touchstart', function (e) {
+      if (!available() || e.touches.length !== 1) {
+        return;
+      }
+
+      e.preventDefault();
+
+      beginStroke(
+        fromEvent(e.touches[0]),
+        'touch'
+      );
+
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', function (e) {
+      if (
+        !current ||
+        activePointer !== 'touch'
+      ) return;
+
+      e.preventDefault();
+
+      if (e.touches.length) {
+        pending.push(
+          fromEvent(e.touches[0])
+        );
+        schedulePaint();
+      }
+
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', function (e) {
+      if (
+        !current ||
+        activePointer !== 'touch'
+      ) return;
+
+      e.preventDefault();
+
+      if (e.changedTouches.length) {
+        pending.push(
+          fromEvent(e.changedTouches[0])
+        );
+      }
+
+      finishStroke();
+
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', function (e) {
+      if (
+        !current ||
+        activePointer !== 'touch'
+      ) return;
+
+      e.preventDefault();
+      finishStroke();
+
+    }, { passive: false });
+  }
+
+  // NOVITÀ: blocca selezione e gesti indesiderati
+  [
+    'contextmenu',
+    'selectstart',
+    'dragstart',
+    'gesturestart',
+    'gesturechange'
+  ].forEach(function (type) {
+    stage.addEventListener(type, function (e) {
+      if (e.cancelable) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  stage.addEventListener(
+    'touchmove',
+    function (e) {
+      if (available() && e.cancelable) {
+        e.preventDefault();
+      }
+    },
+    { passive: false }
+  );
+
+  window.addEventListener('resize', resize);
+
+  if (window.ResizeObserver) {
+    new ResizeObserver(resize).observe(stage);
+  }
+
+  document.addEventListener(
+    'visibilitychange',
+    function () {
+      if (document.hidden) {
+        if (current) finishStroke();
+        if (!v.paused) v.pause();
+      }
+    }
+  );
+
+  enable();
+  resize();
+  update();
+
 })();
 </script>
+
 </body>
 </html>
