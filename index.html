@@ -228,6 +228,25 @@ input[type="range"] {
 html{-webkit-text-size-adjust:100%}
 main{width:100%;max-width:1440px}
 canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* Due rette indipendenti: layout e colori ottimizzati per iPad */
+.line-options{margin:4px 0 18px;padding:11px 13px;background:#eef3ff;border:1px solid #dce5fb;border-radius:12px;font-size:15px;font-weight:600}
+.line-options label{display:flex;align-items:center;gap:10px;cursor:pointer}
+.line-options input{width:20px;height:20px;accent-color:#285bdb}
+.line-group{border:1px solid #e2e9f4;background:#fbfcff;border-radius:15px;padding:13px 14px;margin:12px 0}
+.line-group.secondary{background:#fff9fb;border-color:#f6dce7}
+.line-group h2{display:flex;align-items:center;gap:9px;margin:1px 0 10px;font-size:17px}
+.color-dot{display:inline-block;flex:0 0 13px;width:13px;height:13px;border-radius:50%;background:var(--dot)}
+.line-group .control{margin:12px 0 17px}
+.line-group .control:last-child{margin-bottom:4px}
+.line-group .control-head{flex-wrap:wrap}
+.equation{display:grid;gap:8px;text-align:left;font-size:20px;line-height:1.4;margin-bottom:16px}
+.equation .formula-row{display:flex;align-items:baseline;gap:10px;overflow-wrap:anywhere}
+.equation .formula-row .color-dot{align-self:center}
+#facts .fact-group{margin:8px 0}
+#facts .fact-heading{font-weight:750;display:flex;align-items:center;gap:8px;margin-bottom:3px}
+#facts .relation{margin-top:13px;border-top:1px solid #e2e8f0;padding-top:10px}
+@media(max-width:900px){.line-group{padding:11px 12px}.equation{font-size:19px}}
 </style>
 </head>
 <body>
@@ -235,37 +254,287 @@ canvas{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 <h1>Rette e parabole</h1>
 <div class="tabs" role="tablist" aria-label="Tipo di grafico"><button id="lineTab" type="button">Retta</button><button id="quadTab" type="button" class="active">Parabola</button></div>
 <div class="layout" id="classicLayout"><section class="card"><div class="plot-wrap"><canvas id="plot" width="720" height="540" aria-label="Grafico interattivo"></canvas></div><div class="actions"><button id="zoomIn">+ Zoom</button><button id="zoomOut">− Zoom</button><button id="recenter">Centra</button></div><div class="hint">Trascina il grafico con il dito o la penna per spostare gli assi.</div></section>
-<section class="card"><div class="equation" id="equation"></div><div id="controls"></div><div class="checks"><label><input id="notable" type="checkbox" checked> Mostra punti notevoli</label><label><input id="showSaved" type="checkbox"> Mostra curva memorizzata</label></div><div class="actions action-panel"><button id="remember" class="primary">Memorizza per confronto</button><button id="restore">Ripristina</button></div><div class="facts" id="facts" aria-live="polite"></div></section></div>
+<section class="card"><div class="equation" id="equation"></div><div id="lineOptions" class="line-options" hidden><label for="showLine2"><input type="checkbox" id="showLine2" checked> Mostra seconda retta</label></div><div id="controls"></div><div class="checks"><label><input id="notable" type="checkbox" checked> Mostra punti notevoli</label><label><input id="showSaved" type="checkbox"> Mostra curva memorizzata</label></div><div class="actions action-panel"><button id="remember" class="primary">Memorizza per confronto</button><button id="restore">Ripristina</button></div><div class="facts" id="facts" aria-live="polite"></div></section></div>
 </main>
 <script>
-(function(){'use strict';
-const canvas=document.getElementById('plot'),ctx=canvas.getContext('2d');
-const $=id=>document.getElementById(id), W=720,H=540;
+(function(){
+'use strict';
+const $ = id => document.getElementById(id);
+const canvas=$('plot'),ctx=canvas.getContext('2d'),W=720,H=540;
 let mode='quad',unit=54,centerX=312,centerY=224;
-const defaults={line:{m:1,q:0},quad:{a:1,b:-2,c:-3}};
-const current={line:{...defaults.line},quad:{...defaults.quad}};
+const BLUE='#255ee1', PINK='#dc477f';
+const defaults={
+  line:{m:1,q:0},
+  line2:{m:-1,q:2},
+  quad:{a:1,b:-2,c:-3}
+};
+const current={line:{...defaults.line},line2:{...defaults.line2},quad:{...defaults.quad}};
 const stored={line:null,quad:null};
-const schema={line:[['m','Pendenza m',-8,8],['q','Intercetta q',-10,10]],quad:[['a','Coefficiente a',-5,5],['b','Coefficiente b',-10,10],['c','Coefficiente c',-10,10]]};
+const schema={
+  line:[['m','Pendenza m',-8,8],['q','Intercetta q',-10,10]],
+  quad:[['a','Coefficiente a',-5,5],['b','Coefficiente b',-10,10],['c','Coefficiente c',-10,10]]
+};
+const shownSecond=()=>$('showLine2').checked;
 const round=n=>Math.abs(n)<1e-8?0:Math.round(n*100)/100;
 const fmt=n=>String(round(n)).replace('.',',');
-const value=(x,v)=>mode==='line'?v.m*x+v.q:v.a*x*x+v.b*x+v.c;
-function formula(v){if(mode==='line')return 'y = '+fmt(v.m)+'x '+(v.q<0?'− ':'+ ')+fmt(Math.abs(v.q));return 'y = '+fmt(v.a)+'x² '+(v.b<0?'− ':'+ ')+fmt(Math.abs(v.b))+'x '+(v.c<0?'− ':'+ ')+fmt(Math.abs(v.c));}
-function controls(){const holder=$('controls');holder.innerHTML='';for(const [key,title,min,max] of schema[mode]){const section=document.createElement('div');section.className='control';const header=document.createElement('div');header.className='control-head';const name=document.createElement('label');name.textContent=title;const num=document.createElement('input');num.type='number';num.step='0.1';num.value=current[mode][key];name.htmlFor='num-'+key;num.id='num-'+key;const slide=document.createElement('input');slide.type='range';slide.min=min;slide.max=max;slide.step='0.1';slide.value=current[mode][key];slide.setAttribute('aria-label',title);header.append(name,num);section.append(header,slide);holder.append(section);slide.addEventListener('input',()=>{current[mode][key]=Number(slide.value);num.value=slide.value;render()});num.addEventListener('input',()=>{const v=Number(num.value);if(num.value.trim()!==''&&Number.isFinite(v)){current[mode][key]=v;slide.value=Math.min(max,Math.max(min,v));render()}})}}
-function seg(x1,y1,x2,y2,color='#e8eef8',width=1,dash=[]){ctx.beginPath();ctx.setLineDash(dash);ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();ctx.setLineDash([])}
+const near=(a,b)=>Math.abs(a-b)<1e-9;
+const value=(x,v,kind=mode)=>kind==='line'?v.m*x+v.q:v.a*x*x+v.b*x+v.c;
+const linearFormula=v=>'y = '+fmt(v.m)+'x '+(v.q<0?'− ':'+ ')+fmt(Math.abs(v.q));
+const quadraticFormula=v=>'y = '+fmt(v.a)+'x² '+(v.b<0?'− ':'+ ')+fmt(Math.abs(v.b))+'x '+(v.c<0?'− ':'+ ')+fmt(Math.abs(v.c));
+
+function buildInputs(holder,model,kind,prefix){
+  for(const [key,title,min,max] of schema[kind]){
+    const section=document.createElement('div');section.className='control';
+    const head=document.createElement('div');head.className='control-head';
+    const label=document.createElement('label');label.textContent=title;
+    const number=document.createElement('input');number.type='number';number.step='0.1';
+    number.value=model[key];number.id=prefix+'-'+key;label.htmlFor=number.id;
+    const slider=document.createElement('input');slider.type='range';slider.min=min;slider.max=max;
+    slider.step='0.1';slider.value=model[key];slider.setAttribute('aria-label',prefix+': '+title);
+    head.append(label,number);section.append(head,slider);holder.append(section);
+    slider.addEventListener('input',()=>{model[key]=Number(slider.value);number.value=slider.value;render()});
+    number.addEventListener('input',()=>{
+      if(number.value.trim()==='')return;
+      const v=Number(number.value);
+      if(Number.isFinite(v)){
+        model[key]=v;
+        slider.value=Math.min(max,Math.max(min,v));
+        render();
+      }
+    });
+  }
+}
+function controlGroup(title,color,model,kind,prefix,secondary=false){
+  const group=document.createElement('div');
+  group.className='line-group'+(secondary?' secondary':'');
+  const heading=document.createElement('h2');
+  const dot=document.createElement('span');dot.className='color-dot';dot.style.setProperty('--dot',color);
+  heading.append(dot,document.createTextNode(title));group.append(heading);
+  buildInputs(group,model,kind,prefix);
+  return group;
+}
+function controls(){
+  const holder=$('controls');holder.innerHTML='';
+  if(mode==='line'){
+    holder.append(controlGroup('Retta 1',BLUE,current.line,'line','r1'));
+    if(shownSecond())holder.append(controlGroup('Retta 2',PINK,current.line2,'line','r2',true));
+  } else {
+    buildInputs(holder,current.quad,'quad','parabola');
+  }
+}
+function displayEquations(){
+  const eq=$('equation');eq.innerHTML='';
+  if(mode==='quad'){
+    const row=document.createElement('div');row.textContent=quadraticFormula(current.quad);
+    eq.append(row);return;
+  }
+  const append=(color,formula)=>{
+    const row=document.createElement('div');row.className='formula-row';
+    const dot=document.createElement('span');dot.className='color-dot';dot.style.setProperty('--dot',color);
+    const text=document.createElement('span');text.textContent=formula;
+    row.append(dot,text);eq.append(row);
+  };
+  append(BLUE,linearFormula(current.line));
+  if(shownSecond())append(PINK,linearFormula(current.line2));
+}
+function seg(x1,y1,x2,y2,color='#e8eef8',width=1,dash=[]){
+  ctx.beginPath();ctx.setLineDash(dash);ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();ctx.setLineDash([]);
+}
 function xy(x,y){return [centerX+x*unit,centerY-y*unit]}
-function text(t,x,y,size=14,color='#71829c',align='left'){ctx.font=size+'px -apple-system,Arial,sans-serif';ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(t,x,y)}
-function point(x,y,label,priority=1){if(!Number.isFinite(x)||!Number.isFinite(y))return;const [px,py]=xy(x,y);if(px<8||px>W-8||py<8||py>H-8)return;const old=markers.find(m=>Math.hypot(m.px-px,m.py-py)<9);if(old){if(priority>old.priority)Object.assign(old,{label,priority});return}markers.push({px,py,label,priority})}
+function text(t,x,y,size=14,color='#71829c',align='left'){
+  ctx.font=size+'px -apple-system,Arial,sans-serif';ctx.textAlign=align;ctx.fillStyle=color;ctx.fillText(t,x,y);
+}
 let markers=[];
-function labels(){const used=[];markers.sort((a,b)=>b.priority-a.priority);for(const m of markers){ctx.font='bold 15px -apple-system,Arial';const width=ctx.measureText(m.label).width+20,hh=29;const positions=[[12,-37],[12,12],[-width-12,-37],[-width-12,12],[12,-65],[-width-12,40]];let best=null,score=Infinity;for(const [dx,dy] of positions){const x=m.px+dx,y=m.py+dy;const over=Math.max(0,5-x)+Math.max(0,x+width-W+5)+Math.max(0,5-y)+Math.max(0,y+hh-H+5);let overlap=0;for(const b of used)overlap+=Math.max(0,Math.min(x+width,b.x+b.w)-Math.max(x,b.x))*Math.max(0,Math.min(y+hh,b.y+b.h)-Math.max(y,b.y));const s=1000*over+overlap;if(s<score){score=s;best={x,y,w:width,h:hh}}}if(!best)continue;const x=Math.max(4,Math.min(W-best.w-4,best.x)),y=Math.max(4,Math.min(H-best.h-4,best.y));used.push({x,y,w:best.w,h:hh});ctx.fillStyle='#fff';ctx.strokeStyle='#cad8ee';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(x,y,best.w,hh,7);ctx.fill();ctx.stroke();text(m.label,x+10,y+19,15,'#285bdb');ctx.beginPath();ctx.arc(m.px,m.py,5,0,2*Math.PI);ctx.fillStyle='#285bdb';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke()}}
-function curve(v,color,dashed=false){ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();ctx.beginPath();ctx.setLineDash(dashed?[9,7]:[]);ctx.lineWidth=dashed?2.4:3.5;ctx.strokeStyle=color;let began=false;for(let px=0;px<=W;px+=1.5){const x=(px-centerX)/unit,py=centerY-value(x,v)*unit;if(!Number.isFinite(py)||Math.abs(py)>50000){began=false;continue}if(began)ctx.lineTo(px,py);else{ctx.moveTo(px,py);began=true}}ctx.stroke();ctx.restore()}
-function axis(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);let step=unit;let interval=1;while(step<37){interval*=2;step=unit*interval}while(step>105){interval/=2;step=unit*interval}for(let k=Math.ceil(-centerX/step);k<=(W-centerX)/step;k++){const x=centerX+k*step;seg(x,0,x,H);if(Math.abs(x-centerX)>1)text(fmt(k*interval),x+4,centerY+16,14)}for(let k=Math.ceil((centerY-H)/step);k<=(centerY/step);k++){const y=centerY-k*step;seg(0,y,W,y);if(Math.abs(y-centerY)>1)text(fmt(k*interval),centerX+6,y-6,14)}seg(centerX,0,centerX,H,'#8493a9',1.5);seg(0,centerY,W,centerY,'#8493a9',1.5);text('x',W-18,centerY-9,14,'#52627e');text('y',centerX+9,18,14,'#52627e')}
-function facts(v){if(mode==='line'){let html='<strong>Pendenza:</strong> '+fmt(v.m)+'<br><strong>Intersezione con asse y:</strong> (0; '+fmt(v.q)+')';if(v.m!==0)html+='<br><strong>Intersezione con asse x:</strong> ('+fmt(-v.q/v.m)+'; 0)';else html+='<br><strong>Retta:</strong> '+(v.q===0?'coincidente con asse x':'orizzontale');$('facts').innerHTML=html;return}const {a,b,c}=v;if(Math.abs(a)<1e-10){$('facts').innerHTML='<strong>Attenzione:</strong> a = 0: il grafico è una retta.<br><strong>Intercetta y:</strong> '+fmt(c);return}const h=-b/(2*a),k=value(h,v),disc=b*b-4*a*c;let html='<strong>Concavità:</strong> verso '+(a>0?'l’alto':'il basso')+'<br><strong>Vertice:</strong> V('+fmt(h)+'; '+fmt(k)+')<br><strong>Asse di simmetria:</strong> x = '+fmt(h)+'<br><strong>Discriminante:</strong> Δ = '+fmt(disc);if(disc>1e-10){const r1=(-b-Math.sqrt(disc))/(2*a),r2=(-b+Math.sqrt(disc))/(2*a);html+='<br><strong>Due radici reali:</strong> '+fmt(Math.min(r1,r2))+' e '+fmt(Math.max(r1,r2))}else if(Math.abs(disc)<=1e-10){html+='<br><strong>Una radice doppia:</strong> '+fmt(h)}else html+='<br><strong>Nessuna radice reale</strong>';$('facts').innerHTML=html}
-function render(){markers=[];axis();if(stored[mode]&&$('showSaved').checked)curve(stored[mode],'#f0a345',true);const v=current[mode];curve(v,'#255ee1');$('equation').textContent=formula(v);facts(v);if($('notable').checked){if(mode==='line'){point(0,v.q,'(0; '+fmt(v.q)+')');if(Math.abs(v.m)>1e-10)point(-v.q/v.m,0,'x = '+fmt(-v.q/v.m),2)}else if(Math.abs(v.a)>1e-10){const h=-v.b/(2*v.a);point(h,value(h,v),'V('+fmt(h)+'; '+fmt(value(h,v))+')',3);point(0,v.c,'(0; '+fmt(v.c)+')');const d=v.b*v.b-4*v.a*v.c;if(d>=0){const r1=(-v.b-Math.sqrt(d))/(2*v.a),r2=(-v.b+Math.sqrt(d))/(2*v.a);point(r1,0,'x₁ = '+fmt(r1),2);if(Math.abs(r1-r2)>1e-8)point(r2,0,'x₂ = '+fmt(r2),2)}const [px]=xy(h,0);if(px>=0&&px<=W)seg(px,0,px,H,'#efa74b',1.4,[6,6])}else{point(0,v.c,'(0; '+fmt(v.c)+')')}}labels()}
-function setMode(m){mode=m;$('lineTab').classList.toggle('active',m==='line');$('quadTab').classList.toggle('active',m==='quad');controls();render()}
-$('lineTab').addEventListener('click',()=>setMode('line'));$('quadTab').addEventListener('click',()=>setMode('quad'));
-$('zoomIn').addEventListener('click',()=>{unit=Math.min(220,unit*1.25);render()});$('zoomOut').addEventListener('click',()=>{unit=Math.max(9,unit/1.25);render()});$('recenter').addEventListener('click',()=>{centerX=W/2;centerY=H/2;render()});$('notable').addEventListener('change',render);$('showSaved').addEventListener('change',render);$('remember').addEventListener('click',()=>{stored[mode]={...current[mode]};$('showSaved').checked=true;render()});$('restore').addEventListener('click',()=>{current[mode]={...defaults[mode]};stored[mode]=null;$('showSaved').checked=false;unit=54;centerX=312;centerY=224;controls();render()});
-let drag=null;canvas.addEventListener('pointerdown',e=>{e.preventDefault();canvas.setPointerCapture(e.pointerId);drag={id:e.pointerId,x:e.clientX,y:e.clientY}});canvas.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;const r=canvas.getBoundingClientRect();centerX+=(e.clientX-drag.x)*W/r.width;centerY+=(e.clientY-drag.y)*H/r.height;drag.x=e.clientX;drag.y=e.clientY;render()});canvas.addEventListener('pointerup',()=>{drag=null});canvas.addEventListener('pointercancel',()=>{drag=null});
-controls();render();
+function point(x,y,label,priority=1,color=BLUE){
+  if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  const [px,py]=xy(x,y);if(px<8||px>W-8||py<8||py>H-8)return;
+  const old=markers.find(m=>Math.hypot(m.px-px,m.py-py)<9);
+  if(old){
+    if(priority>old.priority)Object.assign(old,{label,priority,color});
+    return;
+  }
+  markers.push({px,py,label,priority,color});
+}
+function labels(){
+  const used=[];markers.sort((a,b)=>b.priority-a.priority);
+  for(const m of markers){
+    ctx.font='bold 15px -apple-system,Arial';
+    const width=ctx.measureText(m.label).width+20,hh=29;
+    const positions=[[12,-37],[12,12],[-width-12,-37],[-width-12,12],[12,-65],[-width-12,40]];
+    let best=null,score=Infinity;
+    for(const [dx,dy] of positions){
+      const x=m.px+dx,y=m.py+dy;
+      const over=Math.max(0,5-x)+Math.max(0,x+width-W+5)+Math.max(0,5-y)+Math.max(0,y+hh-H+5);
+      let overlap=0;
+      for(const b of used)overlap+=Math.max(0,Math.min(x+width,b.x+b.w)-Math.max(x,b.x))*Math.max(0,Math.min(y+hh,b.y+b.h)-Math.max(y,b.y));
+      const s=1000*over+overlap;if(s<score){score=s;best={x,y,w:width,h:hh}}
+    }
+    if(!best)continue;
+    const x=Math.max(4,Math.min(W-best.w-4,best.x)),y=Math.max(4,Math.min(H-best.h-4,best.y));
+    used.push({x,y,w:best.w,h:hh});
+    ctx.fillStyle='#fff';ctx.strokeStyle='#cad8ee';ctx.lineWidth=1;
+    ctx.beginPath();ctx.roundRect(x,y,best.w,hh,7);ctx.fill();ctx.stroke();
+    text(m.label,x+10,y+19,15,m.color);
+    ctx.beginPath();ctx.arc(m.px,m.py,5,0,2*Math.PI);ctx.fillStyle=m.color;ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+  }
+}
+function curve(v,color,dashed=false,kind=mode){
+  ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
+  ctx.beginPath();ctx.setLineDash(dashed?[9,7]:[]);
+  ctx.lineWidth=dashed?2.4:3.5;ctx.strokeStyle=color;
+  let began=false;
+  for(let px=0;px<=W;px+=1.5){
+    const x=(px-centerX)/unit,py=centerY-value(x,v,kind)*unit;
+    if(!Number.isFinite(py)||Math.abs(py)>50000){began=false;continue}
+    if(began)ctx.lineTo(px,py);else{ctx.moveTo(px,py);began=true}
+  }
+  ctx.stroke();ctx.restore();
+}
+function axis(){
+  ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  let step=unit,interval=1;
+  while(step<37){interval*=2;step=unit*interval}
+  while(step>105){interval/=2;step=unit*interval}
+  for(let k=Math.ceil(-centerX/step);k<=(W-centerX)/step;k++){
+    const x=centerX+k*step;seg(x,0,x,H);
+    if(Math.abs(x-centerX)>1)text(fmt(k*interval),x+4,centerY+16,14);
+  }
+  for(let k=Math.ceil((centerY-H)/step);k<=centerY/step;k++){
+    const y=centerY-k*step;seg(0,y,W,y);
+    if(Math.abs(y-centerY)>1)text(fmt(k*interval),centerX+6,y-6,14);
+  }
+  seg(centerX,0,centerX,H,'#8493a9',1.5);seg(0,centerY,W,centerY,'#8493a9',1.5);
+  text('x',W-18,centerY-9,14,'#52627e');text('y',centerX+9,18,14,'#52627e');
+}
+function lineFacts(){
+  const a=current.line,b=current.line2;
+  const one=(v,title,color)=>{
+    let html='<div class="fact-group"><div class="fact-heading"><span class="color-dot" style="--dot:'+color+'"></span>'+title+'</div>';
+    html+='<strong>Pendenza:</strong> '+fmt(v.m)+'<br><strong>Intersezione con asse y:</strong> (0; '+fmt(v.q)+')';
+    if(!near(v.m,0))html+='<br><strong>Intersezione con asse x:</strong> ('+fmt(-v.q/v.m)+'; 0)';
+    else html+='<br><strong>Retta:</strong> '+(near(v.q,0)?'coincidente con l’asse x':'orizzontale');
+    return html+'</div>';
+  };
+  let html=one(a,'Retta 1',BLUE);
+  if(shownSecond()){
+    html+=one(b,'Retta 2',PINK);
+    if(near(a.m,b.m)){
+      html+='<div class="relation"><strong>Confronto:</strong> '+(near(a.q,b.q)?'le rette sono coincidenti (infiniti punti in comune).':'le rette sono parallele (nessuna intersezione).')+'</div>';
+    } else {
+      const ix=(b.q-a.q)/(a.m-b.m),iy=a.m*ix+a.q;
+      html+='<div class="relation"><strong>Intersezione delle due rette:</strong> P('+fmt(ix)+'; '+fmt(iy)+')<br><strong>Posizione:</strong> rette incidenti.</div>';
+      if($('notable').checked)point(ix,iy,'P('+fmt(ix)+'; '+fmt(iy)+')',5,'#8750be');
+    }
+  }
+  $('facts').innerHTML=html;
+}
+function quadFacts(){
+  const {a,b,c}=current.quad;
+  if(Math.abs(a)<1e-10){
+    $('facts').innerHTML='<strong>Attenzione:</strong> a = 0: il grafico è una retta.<br><strong>Intercetta y:</strong> '+fmt(c);
+    return;
+  }
+  const h=-b/(2*a),k=value(h,current.quad),disc=b*b-4*a*c;
+  let html='<strong>Concavità:</strong> verso '+(a>0?'l’alto':'il basso')+
+   '<br><strong>Vertice:</strong> V('+fmt(h)+'; '+fmt(k)+')'+
+   '<br><strong>Asse di simmetria:</strong> x = '+fmt(h)+
+   '<br><strong>Discriminante:</strong> Δ = '+fmt(disc);
+  if(disc>1e-10){
+    const r1=(-b-Math.sqrt(disc))/(2*a),r2=(-b+Math.sqrt(disc))/(2*a);
+    html+='<br><strong>Due radici reali:</strong> '+fmt(Math.min(r1,r2))+' e '+fmt(Math.max(r1,r2));
+  } else if(Math.abs(disc)<=1e-10){html+='<br><strong>Una radice doppia:</strong> '+fmt(h)}
+  else html+='<br><strong>Nessuna radice reale</strong>';
+  $('facts').innerHTML=html;
+}
+function markLine(v,color,name){
+  point(0,v.q,name+': (0; '+fmt(v.q)+')',1,color);
+  if(!near(v.m,0))point(-v.q/v.m,0,name+': x = '+fmt(-v.q/v.m),2,color);
+}
+function markQuad(v){
+  if(Math.abs(v.a)>1e-10){
+    const h=-v.b/(2*v.a);
+    point(h,value(h,v),'V('+fmt(h)+'; '+fmt(value(h,v))+')',3);
+    point(0,v.c,'(0; '+fmt(v.c)+')');
+    const d=v.b*v.b-4*v.a*v.c;
+    if(d>=0){
+      const r1=(-v.b-Math.sqrt(d))/(2*v.a),r2=(-v.b+Math.sqrt(d))/(2*v.a);
+      point(r1,0,'x₁ = '+fmt(r1),2);
+      if(Math.abs(r1-r2)>1e-8)point(r2,0,'x₂ = '+fmt(r2),2);
+    }
+    const [px]=xy(h,0);
+    if(px>=0&&px<=W)seg(px,0,px,H,'#efa74b',1.4,[6,6]);
+  } else {point(0,v.c,'(0; '+fmt(v.c)+')')}
+}
+function render(){
+  markers=[];axis();
+  if(mode==='line'){
+    if(stored.line&&$('showSaved').checked){
+      curve(stored.line.first,'#e5a048',true,'line');
+      if(stored.line.shown)curve(stored.line.second,'#ad70b0',true,'line');
+    }
+    curve(current.line,BLUE,false,'line');
+    if(shownSecond())curve(current.line2,PINK,false,'line');
+    displayEquations();
+    if($('notable').checked){
+      markLine(current.line,BLUE,'R1');
+      if(shownSecond())markLine(current.line2,PINK,'R2');
+    }
+    lineFacts();
+  } else {
+    if(stored.quad&&$('showSaved').checked)curve(stored.quad,'#f0a345',true,'quad');
+    curve(current.quad,BLUE,false,'quad');
+    displayEquations();quadFacts();
+    if($('notable').checked)markQuad(current.quad);
+  }
+  labels();
+}
+function setMode(m){
+  mode=m;
+  $('lineTab').classList.toggle('active',m==='line');
+  $('quadTab').classList.toggle('active',m==='quad');
+  $('lineOptions').hidden=m!=='line';
+  $('showSaved').parentElement.lastChild.textContent=m==='line'?' Mostra rette memorizzate':' Mostra curva memorizzata';
+  controls();render();
+}
+$('lineTab').addEventListener('click',()=>setMode('line'));
+$('quadTab').addEventListener('click',()=>setMode('quad'));
+$('showLine2').addEventListener('change',()=>{controls();render()});
+$('zoomIn').addEventListener('click',()=>{unit=Math.min(220,unit*1.25);render()});
+$('zoomOut').addEventListener('click',()=>{unit=Math.max(9,unit/1.25);render()});
+$('recenter').addEventListener('click',()=>{centerX=W/2;centerY=H/2;render()});
+$('notable').addEventListener('change',render);
+$('showSaved').addEventListener('change',render);
+$('remember').addEventListener('click',()=>{
+  if(mode==='line'){
+    stored.line={first:{...current.line},second:{...current.line2},shown:shownSecond()};
+  }else stored.quad={...current.quad};
+  $('showSaved').checked=true;render();
+});
+$('restore').addEventListener('click',()=>{
+  if(mode==='line'){
+    current.line={...defaults.line};current.line2={...defaults.line2};
+    $('showLine2').checked=true;
+  }else current.quad={...defaults.quad};
+  stored[mode]=null;$('showSaved').checked=false;
+  unit=54;centerX=312;centerY=224;controls();render();
+});
+let drag=null;
+canvas.addEventListener('pointerdown',e=>{
+  e.preventDefault();canvas.setPointerCapture(e.pointerId);
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const r=canvas.getBoundingClientRect();
+  centerX+=(e.clientX-drag.x)*W/r.width;
+  centerY+=(e.clientY-drag.y)*H/r.height;
+  drag.x=e.clientX;drag.y=e.clientY;render();
+});
+canvas.addEventListener('pointerup',()=>{drag=null});
+canvas.addEventListener('pointercancel',()=>{drag=null});
+setMode('quad');
 })();
 </script>
 </body>
